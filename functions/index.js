@@ -45,57 +45,61 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     let patronOptions = {
         from: '"UVA Library" <NO-REPLY-LIBRARY@Virginia.EDU>',
         replyTo: '"UVA Library" <NO-REPLY-LIBRARY@Virginia.EDU>',
-        to: '',
-        subject: '',
-        text: '',
-        html: ''
+        to: 'jkelly@virginia.edu',
+        subject: 'This is a test',
+        text: 'Testing to see if the script successfully executes and sends email.',
+        html: '<p>Testing to see if the script <em>successfully</em> executes and sends email.</p>'
     };
 
+    return mailTransport.sendMail(patronOptions)
+        .then(() => console.log(`Sent email regarding request ${requestId}`))
+        .catch((error) => console.error('There was an error while sending the email:', error));
+
     // Identify the request type and process...
-    switch (reqDetails.form_id) {
-        case 'purchase_requests':
-            console.log('purchase request');
-            results = prepPurchaseRequestInfo(reqDetails, libraryOptions, patronOptions);
-            break;
-        case 'government_information_contact_u':
-            console.log('gov dogs request');
-            results = prepGovernmentInformationRequest(reqDetails, libraryOptions, patronOptions);
-            break;
-        default:
-            results = [];
-            break;
-    }
-
-    // If a valid form then send notifications and save data to LibInsight.
-    if (results.length > 0) {
-        // If the form submission is valid then continue...
-        if (results['valid']) {
-            /*            const tasks = [];
-                        tasks.push(mailTransport.sendEmail(results['libEmailOptions']));
-                        tasks.push(mailTransport.sendEmail(results['patronEmailOptions']));
-                        tasks.push(saveToLibInsight['']);
-                        // @TODO if the request required authentication, then update the status for the request to received?
-                        return Promise.all(tasks); */
-            return mailTransport.sendMail(results['libEmailOptions'])
-                .then(() => {
-                    console.log('Library notification sent/received request');
-
-                    //@TODO update request status for those requests that required authentication
-
-                    return mailTransport.sendMail(results['patronEmailOptions']);
-                })
-                .catch(error => {
-                    console.log(error);
-                    return Promise.reject(new Error(error));
-                });
-        } else {
-            // return a Promise error?
-            console.log(`Error sending notifications for request ${requestId}.`);
+    /*    switch (reqDetails.form_id) {
+            case 'purchase_requests':
+                console.log('purchase request');
+                results = prepPurchaseRequestInfo(reqDetails, libraryOptions, patronOptions);
+                break;
+            case 'government_information_contact_u':
+                console.log('gov docs request');
+                results = prepGovernmentInformationRequest(reqDetails, libraryOptions, patronOptions);
+                break;
+            default:
+                results = [];
+                break;
         }
-    } else {
-        console.log(`Error preparing request ${requestId}.`);
-    }
-    return null;
+
+        // If a valid form then send notifications and save data to LibInsight.
+        if (results.length > 0) {
+            // If the form submission is valid then continue...
+            if (results['valid']) {
+                            const tasks = [];
+                            tasks.push(mailTransport.sendEmail(results['libEmailOptions']));
+                            tasks.push(mailTransport.sendEmail(results['patronEmailOptions']));
+                            tasks.push(saveToLibInsight['']);
+                            // @TODO if the request required authentication, then update the status for the request to received?
+                            return Promise.all(tasks); 
+                return mailTransport.sendMail(results['libEmailOptions'])
+                    .then(() => {
+                        console.log('Library notification sent/received request');
+
+                        //@TODO update request status for those requests that required authentication
+
+                        return mailTransport.sendMail(results['patronEmailOptions']);
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        return Promise.reject(new Error(error));
+                    });
+            } else {
+                // return a Promise error?
+                console.log(`Error sending notifications for request ${requestId}.`);
+            }
+        } else {
+            console.log(`Error preparing request ${requestId}.`);
+        }
+        return null;*/
 });
 
 function prepPurchaseRequestInfo(frmData, libOptions, userOptions) {
