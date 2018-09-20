@@ -29,7 +29,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const when = new Date(newRequest.timestamp);
     console.log(`details: ${JSON.stringify(reqDetails)}`);
     console.log(`when: ${when.toString()}`);
-    console.log(`form: ${reqDetails.form_id}`);
+    console.log(`form: ${reqDetails[0].form_id.value}`);
 
     // @TODO Validation of required inputs should be client side only
     // @TODO Just thinking... submit click in the form should make sure all required fields have been populated at least!
@@ -57,25 +57,16 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     //        .catch((error) => console.error('There was an error while sending the email:', error));
 
     // Identify the request type and process...
-    if (reqDetails.form_id === 'purchase_requests') {
-        console.log(`purchase request: ${requestId}`);
-        return processPurchaseRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
-    } else if (reqDetails.form_id === 'government_information_contact_u') {
-        console.log(`gov docs request: ${requestId}`);
-        return processGovernmentInformationRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
-    } else {
-        return null;
+    switch (reqDetails[0].form_id.value) {
+        case 'purchase_requests':
+            console.log(`purchase request: ${requestId}`);
+            return processPurchaseRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
+        case 'government_information_contact_u':
+            console.log(`gov docs request: ${requestId}`);
+            return processGovernmentInformationRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
+        default:
+            return null;
     }
-    /*    switch (reqDetails.form_id) {
-            case 'purchase_requests':
-                console.log(`purchase request: ${requestId}`);
-                return processPurchaseRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
-            case 'government_information_contact_u':
-                console.log(`gov docs request: ${requestId}`);
-                return processGovernmentInformationRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
-            default:
-                return null;
-        }*/
 
 });
 
