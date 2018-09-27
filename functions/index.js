@@ -24,12 +24,13 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const requestId = context.params.requestId;
     // Grab the request.
     const newRequest = snapshot.val();
-    console.log(newRequest);
     const reqDetails = JSON.parse(newRequest.submission);
+    const formId = getFormId(reqDetails);
     const when = new Date(newRequest.timestamp);
+    console.log(newRequest);
     console.log(`details: ${JSON.stringify(reqDetails)}`);
+    console.log(`form_id: ${formId}`);
     console.log(`when: ${when.toString()}`);
-    console.log(`form: ${reqDetails[0].form_id.value}`);
 
     // @TODO Validation of required inputs should be client side only
     // @TODO Just thinking... submit click in the form should make sure all required fields have been populated at least!
@@ -57,18 +58,63 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     //        .catch((error) => console.error('There was an error while sending the email:', error));
 
     // Identify the request type and process...
-    switch (reqDetails[0].form_id.value) {
-        case 'purchase_requests':
-            console.log(`purchase request: ${requestId}`);
-            return processPurchaseRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
-        case 'government_information_contact_u':
-            console.log(`gov docs request: ${requestId}`);
-            return processGovernmentInformationRequest(requestId, newRequest.timestamp, reqDetails, libraryOptions, patronOptions);
-        default:
-            return null;
+    const formFields = getFormFields(reqDetails);
+    if (formId === 'purchase_requests') {
+        console.log(`purchase request: ${requestId}`);
+        return processPurchaseRequest(requestId, newRequest.timestamp, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'government_information_contact_u') {
+        console.log(`gov docs request: ${requestId}`);
+        return processGovernmentInformationRequest(requestId, newRequest.timestamp, formFields, libraryOptions, patronOptions);
+    } else {
+        return null;
     }
 
 });
+
+function getFormId(formDefn) {
+    console.log('in getFormId');
+    let i = 0;
+    let form_id = '';
+    while (i < formDefn.length) {
+        if (formDefn[i].webform && formDefn[i].webform !== '') {
+            form_id = formDefn[i].webform;
+            break;
+        }
+        i++;
+    }
+    return form_id;
+}
+
+function getFormFields(formDefn) {
+    console.log('in getFormFields');
+    let i = 0;
+    let fields = {};
+    while (i < formDefn.length) {
+        let field = formDefn[i].webform_key;
+        console.log(`field: ${field}`);
+        if (field.match(/^sect_/)) {
+            fields[field] = getSectionFields(formDefn[i]);
+            fields[field].label = formDefn[i].title;
+        } else if (field.match(/^fld_|authenticated/)) {
+            fields[field] = { label: formDefn[i].title, value: formDefn[i].value };
+        } else if (field.match(/^fldset_/)) {
+            // @TODO need to flesh this out some depending on ways radio groups, checkboxes work...
+        }
+        i++;
+    }
+    return fields;
+}
+
+function getSectionFields(section) {
+    console.log('in getSectionFields');
+    let fields = Array();
+    for (var key in section) {
+        if (key.match(/^fld|fldset/)) {
+            fields[key] = { label: section[key].title, value: section[key].value };
+        }
+    }
+    return fields;
+}
 
 function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let inputs = msg = '';
@@ -97,21 +143,22 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     let promises = [];
     let results = {};
 
+    console.log(`frmData: ${JSON.stringify(frmData)}`);
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_uva_computing_id.value) {
-        inputs += "<strong>UVA Computing ID, e.g. mst3k:</strong> " + frmData.fld_uva_computing_id.value + "<br>\n";
+        inputs += "<strong>" + frmData.fld_uva_computing_id.title + ":</strong> " + frmData.fld_uva_computing_id.value + "<br>\n";
         data['field_622'] = frmData.fld_uva_computing_id.value;
     }
     if (frmData.fld_name.value) {
-        inputs += "<strong>Name:</strong> " + frmData.fld_name.value + "<br>\n";
+        inputs += "<strong>" + frmData.fld_name.title + ":</strong> " + frmData.fld_name.value + "<br>\n";
         data['field_623'] = frmData.fld_name.value;
     }
     if (frmData.fld_email_address.value) {
-        inputs += "<strong>Email address:</strong> " + frmData.fld_email_address.value + "<br>\n";
+        inputs += "<strong>" + frmData.fld_email_address.title + ":</strong> " + frmData.fld_email_address.value + "<br>\n";
         data['field_624'] = frmData.fld_email_address.value;
     }
-    if (frmData.fldset_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
-        inputs += "<h1>Question or Comment<h1>\n\n<p>" + frmData.fldset_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
+    if (frmData.sect_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
+        inputs += "<h2>" + frmData.sect_question_or_comment.title + "<h2>\n\n<p>" + frmData.fldset_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
         data['field_625'] = frmData.fldset_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
     }
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
