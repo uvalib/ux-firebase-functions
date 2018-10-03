@@ -27,7 +27,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const reqDetails = JSON.parse(newRequest.submission);
     const formId = getFormId(reqDetails);
     const when = new Date(newRequest.timestamp);
-    console.log(newRequest);
+    //console.log(newRequest);
     console.log(`details: ${JSON.stringify(reqDetails)}`);
     console.log(`form_id: ${formId}`);
     console.log(`when: ${when.toString()}`);
@@ -61,10 +61,10 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const formFields = getFormFields(reqDetails);
     if (formId === 'purchase_requests') {
         console.log(`purchase request: ${requestId}`);
-        return processPurchaseRequest(requestId, newRequest.timestamp, formFields, libraryOptions, patronOptions);
+        return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         console.log(`gov docs request: ${requestId}`);
-        return processGovernmentInformationRequest(requestId, newRequest.timestamp, formFields, libraryOptions, patronOptions);
+        return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
     }
@@ -72,7 +72,6 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
 });
 
 function getFormId(formDefn) {
-    console.log('in getFormId');
     let i = 0;
     let form_id = '';
     while (i < formDefn.length) {
@@ -86,19 +85,17 @@ function getFormId(formDefn) {
 }
 
 function getFormFields(formDefn) {
-    console.log('in getFormFields');
     let i = 0;
     let fields = {};
     while (i < formDefn.length) {
         let field = formDefn[i].webform_key;
-        console.log(`field: ${field}`);
+        //console.log(`field: ${field}`);
         if (field.match(/^sect_/)) {
-            fields[field] = getSectionFields(formDefn[i]);
-            fields[field].label = formDefn[i].title;
+            fields[field] = { title: formDefn[i].title, fields: getSectionFields(formDefn[i]) };
         } else if (field.match(/^fld_|authenticated/)) {
             fields[field] = { label: formDefn[i].title, value: formDefn[i].value };
         } else if (field.match(/^fldset_/)) {
-            // @TODO need to flesh this out some depending on ways radio groups, checkboxes work...
+            // @TODO need to flesh this out some depending on ways might use this down the road...
         }
         i++;
     }
@@ -106,12 +103,12 @@ function getFormFields(formDefn) {
 }
 
 function getSectionFields(section) {
-    console.log('in getSectionFields');
-    let fields = Array();
+    let fields = {};
     for (var key in section) {
-        if (key.match(/^fld|fldset/)) {
+        if (key.match(/^fld_/)) {
             fields[key] = { label: section[key].title, value: section[key].value };
         }
+        // @TODO address fieldset down the road?
     }
     return fields;
 }
@@ -146,20 +143,20 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     console.log(`frmData: ${JSON.stringify(frmData)}`);
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_uva_computing_id.value) {
-        inputs += "<strong>" + frmData.fld_uva_computing_id.title + ":</strong> " + frmData.fld_uva_computing_id.value + "<br>\n";
+        inputs += "<strong>" + frmData.fld_uva_computing_id.label + ":</strong> " + frmData.fld_uva_computing_id.value + "<br>\n";
         data['field_622'] = frmData.fld_uva_computing_id.value;
     }
     if (frmData.fld_name.value) {
-        inputs += "<strong>" + frmData.fld_name.title + ":</strong> " + frmData.fld_name.value + "<br>\n";
+        inputs += "<strong>" + frmData.fld_name.label + ":</strong> " + frmData.fld_name.value + "<br>\n";
         data['field_623'] = frmData.fld_name.value;
     }
     if (frmData.fld_email_address.value) {
-        inputs += "<strong>" + frmData.fld_email_address.title + ":</strong> " + frmData.fld_email_address.value + "<br>\n";
+        inputs += "<strong>" + frmData.fld_email_address.label + ":</strong> " + frmData.fld_email_address.value + "<br>\n";
         data['field_624'] = frmData.fld_email_address.value;
     }
-    if (frmData.sect_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
-        inputs += "<h2>" + frmData.sect_question_or_comment.title + "<h2>\n\n<p>" + frmData.fldset_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
-        data['field_625'] = frmData.fldset_question_or_comment.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
+    if (frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
+        inputs += "<h2>" + frmData.sect_question_or_comment.title + "<h2>\n\n<p>" + frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
+        data['field_625'] = frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
     }
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
 
@@ -171,7 +168,7 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     libOptions.subject = 'Reference Referral';
     libOptions.html = msg + inputs;
     libOptions.text = stripHtml(msg + inputs);
-    promises['library_notification'] = mailTransport.sendMail(libOptions);
+    promises[0] = mailTransport.sendMail(libOptions);
 
     // Prepare email confirmation content for patron
     msg = "<p>Your request (copied below) has been received and will be referred to Government Information Resources.</p><br>\n\n";
@@ -181,35 +178,39 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     userOptions.subject = 'Your reference referral';
     userOptions.html = msg + inputs;
     userOptions.text = stripHtml(msg + inputs);
-    promises['patron_notification'] = mailTransport.sendMail(userOptions);
+    promises[1] = mailTransport.sendMail(userOptions);
 
     // Post to LibInsight
-    promises['LibInsight'] = request.post({
+    promises[2] = request.post({
         url: 'https://virginia.libinsight.com/add.php?wid=7&type=5&token=bb329274df6e4be51624cfe7f955b7eb',
         form: data
     });
 
+    console.log(`promises: ${promises}`);
+
     Promise.all(promises)
         .then(responses => {
             let errors = false;
-            if (responses['library_notification'].err) {
+            console.log(`responses: ${responses}`);
+            if (responses[0].err) {
                 errors = true;
                 console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
             } else {
                 results.library_notification = 'succeeded';
             }
-            if (responses['patron_notification'].err) {
+            if (responses[1].err) {
                 errors = true;
                 console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
             } else {
                 results.patron_notification = 'succeeded';
             }
-            if (!responses['LibInsight'].response) {
+            if (!responses[2].response) {
                 errors = true;
                 console.log(`Request ${reqId} LibInsight POST failed.`);
             } else {
                 results.LibInsight = 'succeeded';
             }
+            console.log(`results: ${results}`);
             return results;
         })
         .catch(error => {
