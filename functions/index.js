@@ -188,10 +188,9 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
 
     console.log(`promises: ${promises}`);
 
-    Promise.all(promises)
+    return Promise.all(promises)
         .then(responses => {
             let errors = false;
-            console.log(`responses: ${responses}`);
             if (responses[0].err) {
                 errors = true;
                 console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
@@ -210,12 +209,16 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
             } else {
                 results.LibInsight = 'succeeded';
             }
-            console.log(`results: ${results}`);
-            return results;
+            if (errors) {
+                return errors;
+            } else {
+                console.log(`results: ${JSON.stringify(results)}`);
+                return results;
+            }
         })
         .catch(error => {
-            console.log(error);
             // empty results would be adequate to indicate an error
-            return results;
+            console.log(`error: ${JSON.stringify(error)}`);
+            return error;
         });
 }
