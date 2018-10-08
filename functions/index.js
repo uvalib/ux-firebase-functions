@@ -155,7 +155,7 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
         data['field_624'] = frmData.fld_email_address.value;
     }
     if (frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
-        inputs += "<h2>" + frmData.sect_question_or_comment.title + "<h2>\n\n<p>" + frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
+        inputs += "<h2>" + frmData.sect_question_or_comment.title + "</h2>\n\n<p>" + frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
         data['field_625'] = frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
     }
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
