@@ -142,10 +142,6 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
 
     console.log(`frmData: ${JSON.stringify(frmData)}`);
     // Prepare email message body and LibInsight data parameters
-    if (frmData.fld_uva_computing_id.value) {
-        inputs += "<strong>" + frmData.fld_uva_computing_id.label + ":</strong> " + frmData.fld_uva_computing_id.value + "<br>\n";
-        data['field_622'] = frmData.fld_uva_computing_id.value;
-    }
     if (frmData.fld_name.value) {
         inputs += "<strong>" + frmData.fld_name.label + ":</strong> " + frmData.fld_name.value + "<br>\n";
         data['field_623'] = frmData.fld_name.value;
