@@ -61,6 +61,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const formFields = getFormFields(reqDetails);
     if (formId === 'purchase_requests') {
         console.log(`purchase request: ${requestId}`);
+        // @TODO if form is authenticated then save copy of input to user node in Firebase DB????
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         console.log(`gov docs request: ${requestId}`);
@@ -114,24 +115,193 @@ function getSectionFields(section) {
 }
 
 function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let inputs = msg = '';
-    let data = {};
+    let adminMsg = subjPre = courseInfo = biblioInfo = requestorInfo = '';
+    let patronMsg = "<p>A copy of your purchase recommendation is shown below.</p><br>\n\n";
+    let data = { 'field_642': reqId, 'ts_start': submitted };
+    let promises = [];
+    let results = {};
 
-    // Prepare email content for Library staff and LibInsight data parameters
-    libOptions.from = frmData.fldset_requestor_information.fld_email_address.value;
-    libOptions.replyTo = frmData.fldset_requestor_information.fld_email_address.value;
+    console.log(`frmData: ${JSON.stringify(frmData)}`);
+    // Prepare email message body and LibInsight data parameters
+    // The admin message has a few fields out of order placed at the top.
+    // Fund Code and library location are internal fields defined for use in routing to Acquisitions and Collections Mgmt.
+    // Fund code value depends on if the item is for reserve and what format the item is. 
+    // Library location depends on if the item is for reserve and which library location was specified.
+    let fundCode = libraryLocation = "";
+    if (frmData.fld_is_this_for_course_reserves_.value) {
+        if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
+            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
+                fundCode = "UL-RESERVES";
+                if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value === "Clemons") {
+                    libraryLocation = "Clemons";
+                } else {
+                    libraryLocation = "LC CLASS"; // library whiere typical call number gets housed
+                }
+            }
+        } else {
+            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "Music Recording") || (frmData.fld_format.value === "Music Score")) {
+                fundCode = "UL-REQUESTS";
+                libraryLocation = (frmData.fld_format.value !== "Music Recording") ? "LC CLASS" : "Music";
+            }
+            libraryLocation = (frmData.fld_format.value !== "Music Recording") ? "LC CLASS" : "Music";
+        }
+    }
+    libraryLocation = (frmData.fld_format.value === "Music Score") ? "Music" : libraryLocation;
+    adminMsg += "<strong>Fund code:</strong> " + fundCode + "<br>\n";
+    adminMsg += "<strong></strong> " + libraryLocation + "<br>\n";
+    if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
+        adminMsg += "<strong>Library reserve hold location:</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
+    }
+    if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
+        adminMsg += "<strong>Library reserve loan period:</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
+    }
+
+    if (frmData.fld_format.value) {
+        let msg = "<strong>" + frmData.fld_format.label + ":</strong> " + frmData.fld_format.value + "<br>\n";
+        adminMsg += msg;
+        patronMsg += msg;
+        data['field_645'] = frmData.fld_format.value;
+    }
+    if (frmData.fld_which_type_of_request_is_this_.value) {
+        let msg = "<strong>Type of request:</strong> " + frmData.fld_which_type_of_request_is_this_.value + "<br>\n";
+        adminMsg += msg;
+        patronMsg += msg;
+        data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
+        // set the subject line prefix to the appropriate string based on this input field
+        subjPre = frmData.fld_which_type_of_request_is_this_.value;
+    }
+    if (frmData.fld_is_this_for_course_reserves_.value) {
+        adminMsg += "<strong>" + frmData.fld_is_this_for_course_reserves_.label + ":</strong> " + frmData.fld_is_this_for_course_reserves_.value + "<br>\n";
+        data['field_647'] = frmData.fld_is_this_for_course_reserves_.value;
+        // Build course information output section
+        if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
+            courseInfo += "<h2>" + frmData.sect_course_information.title + "</h2>\n\n<p>";
+            if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.label + ":</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
+                data['field_655'] = frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value;
+            }
+            if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.label + ":</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
+                data['field_708'] = frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value;
+            }
+            if (frmData.sect_course_information.fields.fld_term.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_term.label + ":</strong> " + frmData.sect_course_information.fields.fld_term.value + "<br>\n";
+                data['field_648'] = frmData.sect_course_information.fields.fld_term.value;
+            }
+            if (frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.value + "<br>\n";
+                data['field_649'] = frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.value;
+            }
+            if (frmData.sect_course_information.fields.fld_course_section_e_g_100.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_section_e_g_100.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_section_e_g_100.value + "<br>\n";
+                data['field_650'] = frmData.sect_course_information.fields.fld_course_section_e_g_100.value;
+            }
+            if (frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.label + ":</strong> " + frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.value + "<br>\n";
+                data['field_651'] = frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.value;
+            }
+            if (frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.label + ":</strong> " + frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value + "<br>\n";
+                data['field_652'] = frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value;
+            }
+            if (frmData.sect_course_information.fields.fld_course_title.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_title.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_title.value + "<br>\n";
+                data['field_653'] = frmData.sect_course_information.fields.fld_course_title.value;
+            }
+            if (frmData.sect_course_information.fields.fld_enrollment.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_enrollment.label + ":</strong> " + frmData.sect_course_information.fields.fld_enrollment.value + "<br>\n";
+                data['field_654'] = frmData.sect_course_information.fields.fld_enrollment.value;
+            }
+            courseInfo += "</p><br>\n";
+        }
+        // Create requestor info content for email.
+        requestorInfo += "<h2>";
+        requestorInfo += (frmData.fld_is_this_for_course_reserves_.value === "Yes") ? "Requested" : "Suggested";
+        requestorInfo += " by</h2>\n\n<p>";
+        if (frmData.sect_requestor_information.fields.fld_name.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
+            data['field_687'] = frmData.sect_requestor_information.fields.fld_name.value;
+        }
+        if (frmData.sect_requestor_information.fields.fld_email_address.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
+            data['field_688'] = frmData.sect_requestor_information.fields.fld_email_address.value;
+        }
+        if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
+            data['field_686'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
+        }
+        if (frmData.sect_requestor_information.fields.fld_phone_number.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_phone_number.value + "<br>\n";
+            data['field_689'] = frmData.sect_requestor_information.fields.fld_phone_number.value;
+        }
+        if (frmData.sect_requestor_information.fields.fld_university_affiliation.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_affiliation.value + "<br>\n";
+            data['field_690'] = frmData.sect_requestor_information.fields.fld_university_affiliation.value;
+        }
+        if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
+            data['field_691'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
+        }
+
+    }
+
+    // Prepare email content for Library staff
+    libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
+    libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     // @TODO Routing varies based on format and if for reserves...
-    libOptions.to = 'jlk4p@virginia.edu';
-    libOptions.subject = 'Purchase Request';
-    libOptions.text = 'This is where the fields and their values would be displayed...';
-    request['libEmailOptions'] = libOptions;
-    // Prepare email confirmation content for patron
-    userOptions.to = frmData.fldset_requestor_information.fld_email_address.value;
-    userOptions.subject = 'Purchase Request';
-    userOptions.text = 'This is where the fields and their values would be displayed...';
-    request['patronEmailOptions'] = userOptions;
-    // @TODO Process input in preparation for posting to Springshare LibInsight
+    libOptions.to = 'lib-ux-testing@virginia.edu';
+    libOptions.subject = subjPre + ': Purchase Recommendation';
+    libOptions.html = admniMsg + biblioInfo + requestorInfo + courseInfo;
+    libOptions.text = stripHtml(admniMsg + biblioInfo + requestorInfo + courseInfo);
+    promises[0] = mailTransport.sendMail(libOptions);
 
+    // Prepare email confirmation content for patron
+    userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
+    userOptions.subject = subjPre + ': Purchase Recommendation';
+    userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo;
+    userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo);
+    promises[1] = mailTransport.sendMail(userOptions);
+
+    // Post to LibInsight
+    promises[2] = request.post({
+        url: 'https://virginia.libinsight.com/add.php?wid=8&type=5&token=c00cb2125b61ce41a983140afbfd7f00',
+        form: data
+    });
+    console.log(`promises: ${promises}`);
+
+    return Promise.all(promises)
+        .then(responses => {
+            let errors = false;
+            if (responses[0].err) {
+                errors = true;
+                console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
+            } else {
+                results.library_notification = 'succeeded';
+            }
+            if (responses[1].err) {
+                errors = true;
+                console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
+            } else {
+                results.patron_notification = 'succeeded';
+            }
+            if (!responses[2].response) {
+                errors = true;
+                console.log(`Request ${reqId} LibInsight POST failed.`);
+            } else {
+                results.LibInsight = 'succeeded';
+            }
+            if (errors) {
+                return errors;
+            } else {
+                console.log(`results: ${JSON.stringify(results)}`);
+                return results;
+            }
+        })
+        .catch(error => {
+            // empty results would be adequate to indicate an error
+            console.log(`error: ${JSON.stringify(error)}`);
+            return error;
+        });
 }
 
 function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
