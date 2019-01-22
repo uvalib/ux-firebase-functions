@@ -16,9 +16,9 @@
         "firebase-admin": "^6.0.0",
         "firebase-functions": "^2.1.0",
         "firebase-tools": "^6.2.2",
-        "nodemailer": "^4.7.0",
+        "nodemailer": "^5.1.1",
         "request": "^2.88.0",
-        "string-strip-html": "^3.2.0"
+        "string-strip-html": "^3.5.0"
     },
     "devDependencies": {
         "eslint": "^4.12.0",

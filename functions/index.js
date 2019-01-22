@@ -61,7 +61,6 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const formFields = getFormFields(reqDetails);
     if (formId === 'purchase_requests') {
         console.log(`purchase request: ${requestId}`);
-        // @TODO if form is authenticated then save copy of input to user node in Firebase DB????
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         console.log(`gov docs request: ${requestId}`);
@@ -82,6 +81,7 @@ function getFormId(formDefn) {
         }
         i++;
     }
+    console.log(`form_id: ${form_id}`);
     return form_id;
 }
 
