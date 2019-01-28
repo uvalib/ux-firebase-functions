@@ -146,7 +146,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     }
     libraryLocation = (frmData.fld_format.value === "Music Score") ? "Music" : libraryLocation;
     adminMsg += "<strong>Fund code:</strong> " + fundCode + "<br>\n";
-    adminMsg += "<strong></strong> " + libraryLocation + "<br>\n";
+    adminMsg += "<strong>Library location:</strong> " + libraryLocation + "<br>\n";
     if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
         adminMsg += "<strong>Library reserve hold location:</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
     }
@@ -194,9 +194,9 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_section_e_g_100.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_section_e_g_100.value + "<br>\n";
                 data['field_650'] = frmData.sect_course_information.fields.fld_course_section_e_g_100.value;
             }
-            if (frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.label + ":</strong> " + frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.value + "<br>\n";
-                data['field_651'] = frmData.sect_course_information.fields.ld_alternate_course_e_g_dram_3840.value;
+            if (frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.label + ":</strong> " + frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.value + "<br>\n";
+                data['field_651'] = frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.value;
             }
             if (frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.label + ":</strong> " + frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value + "<br>\n";
@@ -359,6 +359,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             data['field_685'] = frmData.sect_bibliographic_information.fields.fld_description_comments.value;
         }
     }
+    console.log(`data: ${data}`);
 
     // Prepare email content for Library staff
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
@@ -403,6 +404,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
                 errors = true;
                 console.log(`Request ${reqId} LibInsight POST failed.`);
             } else {
+                console.log(responses[2]);
                 results.LibInsight = 'succeeded';
             }
             if (errors) {
