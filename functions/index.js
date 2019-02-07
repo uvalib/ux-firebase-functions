@@ -125,7 +125,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     // Fund code value depends on if the item is for reserve and what format the item is. 
     // Library location depends on if the item is for reserve and which library location was specified.
     // Since fund code and library location are for admin purposes, they will not get saved to LibInsight data.
-    let fundCode = libraryLocation = "";
+    let msg = fundCode = libraryLocation = "";
     if (frmData.fld_is_this_for_course_reserves_.value) {
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
             if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
@@ -155,13 +155,21 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     }
 
     if (frmData.fld_format.value) {
-        let msg = "<strong>" + frmData.fld_format.label + ":</strong> " + frmData.fld_format.value + "<br>\n";
+        msg = "<strong>" + frmData.fld_format.label + ":</strong> " + frmData.fld_format.value + "<br>\n";
         adminMsg += msg;
         patronMsg += msg;
         data['field_645'] = frmData.fld_format.value;
     }
+    if (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available_.value) {
+        msg = "<strong>" + frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available_.label + ":</strong> ";
+        msg += (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available_.value === 1) ? 'Yes' : 'No';
+        msg += "<br>\n";
+        adminMsg += msg;
+        patronMsg += msg;
+        data['field_683'] = (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available_.value === 1) ? 'Yes' : 'No';
+    }
     if (frmData.fld_which_type_of_request_is_this_.value) {
-        let msg = "<strong>Type of request:</strong> " + frmData.fld_which_type_of_request_is_this_.value + "<br>\n";
+        msg = "<strong>Type of request:</strong> " + frmData.fld_which_type_of_request_is_this_.value + "<br>\n";
         adminMsg += msg;
         patronMsg += msg;
         data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
@@ -359,7 +367,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             data['field_685'] = frmData.sect_bibliographic_information.fields.fld_description_comments.value;
         }
     }
-    console.log(`data: ${data}`);
+    console.log(`data: ${JSON.stringify(data)}`);
 
     // Prepare email content for Library staff
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
