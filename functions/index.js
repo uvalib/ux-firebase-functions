@@ -404,10 +404,10 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             }
             if (!responses[2].response) {
                 errors = true;
-                console.log(`LibInsight failure: ${responses[2]}`);
+                console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
                 console.log(`Request ${reqId} LibInsight POST failed.`);
             } else {
-                console.log(`LibInsight success: ${responses[2]}`);
+                console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
                 results.LibInsight = 'succeeded';
             }
             if (errors) {
@@ -445,6 +445,7 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
         data['field_625'] = frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
     }
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
+    console.log(`data: ${JSON.stringify(data)}`);
 
     // Prepare email content for Library staff
     // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
@@ -489,10 +490,10 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
             }
             if (!responses[2].response) {
                 errors = true;
-                console.log(`LibInsight failure: ${responses[2]}`);
+                console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
                 console.log(`Request ${reqId} LibInsight POST failed.`);
             } else {
-                console.log(`LibInsight success: ${responses[2]}`);
+                console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
                 results.LibInsight = 'succeeded';
             }
             if (errors) {
