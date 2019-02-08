@@ -51,10 +51,6 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         html: ''
     };
 
-    //    return mailTransport.sendMail(patronOptions)
-    //        .then(() => console.log(`Sent email regarding request ${requestId}`))
-    //        .catch((error) => console.error('There was an error while sending the email:', error));
-
     // Identify the request type and process...
     const formFields = getFormFields(reqDetails);
     if (formId === 'purchase_requests') {
@@ -87,7 +83,6 @@ function getFormFields(formDefn) {
     let fields = {};
     while (i < formDefn.length) {
         let field = formDefn[i].webform_key;
-        //console.log(`field: ${field}`);
         if (field.match(/^sect_/)) {
             fields[field] = { title: formDefn[i].title, fields: getSectionFields(formDefn[i]) };
         } else if (field.match(/^fld_|authenticated/)) {
@@ -391,7 +386,6 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         url: 'https://virginia.libinsight.com/add.php?wid=8&type=5&token=c00cb2125b61ce41a983140afbfd7f00',
         form: data
     });
-    console.log(`promises: ${promises}`);
 
     return Promise.all(promises)
         .then(responses => {
@@ -410,9 +404,10 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             }
             if (!responses[2].response) {
                 errors = true;
+                console.log(`LibInsight failure: ${responses[2]}`);
                 console.log(`Request ${reqId} LibInsight POST failed.`);
             } else {
-                console.log(responses[2]);
+                console.log(`LibInsight success: ${responses[2]}`);
                 results.LibInsight = 'succeeded';
             }
             if (errors) {
@@ -477,8 +472,6 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
         form: data
     });
 
-    console.log(`promises: ${promises}`);
-
     return Promise.all(promises)
         .then(responses => {
             let errors = false;
@@ -496,8 +489,10 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
             }
             if (!responses[2].response) {
                 errors = true;
+                console.log(`LibInsight failure: ${responses[2]}`);
                 console.log(`Request ${reqId} LibInsight POST failed.`);
             } else {
+                console.log(`LibInsight success: ${responses[2]}`);
                 results.LibInsight = 'succeeded';
             }
             if (errors) {
