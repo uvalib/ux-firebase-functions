@@ -3,10 +3,12 @@ const nodemailer = require('nodemailer');
 const request = require('request');
 const stripHtml = require('string-strip-html');
 
-// Environment variables configured for use with sending emails for forms.
+// Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
 const gmailEmail = functions.config().gmail.formsemail;
 const gmailPassword = functions.config().gmail.formspassword;
+const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purchaserecommendation;
+const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 
 // Configure the email transport using the default SMTP transport and a GMail account.
 // For other types of transports such as Sendgrid see https://nodemailer.com/transports/
@@ -383,7 +385,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
 
     // Post to LibInsight
     promises[2] = request.post({
-        url: 'https://virginia.libinsight.com/add.php?wid=8&type=5&token=c00cb2125b61ce41a983140afbfd7f00',
+        url: purchaseRecommendationDatasetApi,
         form: data
     });
 
@@ -469,7 +471,7 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
 
     // Post to LibInsight
     promises[2] = request.post({
-        url: 'https://virginia.libinsight.com/add.php?wid=7&type=5&token=bb329274df6e4be51624cfe7f955b7eb',
+        url: governmentInformationDatasetApi,
         form: data
     });
 
