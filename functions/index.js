@@ -170,8 +170,8 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         adminMsg += msg;
         patronMsg += msg;
         data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
-        // set the subject line prefix to the appropriate string based on this input field
-        subjPre = frmData.fld_which_type_of_request_is_this_.value;
+        // set the subject line prefix to the appropriate string based on this type of request but truncate the string.
+        subjPre = frmData.fld_which_type_of_request_is_this_.value.substring(1, frmData.fld_which_type_of_request_is_this_.value.indexOf('('));
     }
     if (frmData.fld_is_this_for_course_reserves_.value) {
         adminMsg += "<strong>" + frmData.fld_is_this_for_course_reserves_.label + ":</strong> " + frmData.fld_is_this_for_course_reserves_.value + "<br>\n";
@@ -241,9 +241,13 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_affiliation.value + "<br>\n";
             data['field_690'] = frmData.sect_requestor_information.fields.fld_university_affiliation.value;
         }
+        if (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value) {
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value + "<br>\n";
+            data['field_691'] = frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value;
+        }
+        // The primary dept/school from LDAP is for internal use only within LibInsight. Not needed in email.
         if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
-            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
-            data['field_691'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
+            data['field_750'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
         }
         // Create format's bibliographic info output and set appropriate LibInsight fields.
         biblioInfo += "<h2>" + frmData.sect_bibliographic_information.title + "</h2>\n\n<p>";
