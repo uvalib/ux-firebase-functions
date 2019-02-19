@@ -171,7 +171,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         patronMsg += msg;
         data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
         // set the subject line prefix to the appropriate string based on this type of request but truncate the string.
-        subjPre = frmData.fld_which_type_of_request_is_this_.value.substring(1, frmData.fld_which_type_of_request_is_this_.value.indexOf('('));
+        subjPre = frmData.fld_which_type_of_request_is_this_.value.substring(0, frmData.fld_which_type_of_request_is_this_.value.indexOf('('));
     }
     if (frmData.fld_is_this_for_course_reserves_.value) {
         adminMsg += "<strong>" + frmData.fld_is_this_for_course_reserves_.label + ":</strong> " + frmData.fld_is_this_for_course_reserves_.value + "<br>\n";
