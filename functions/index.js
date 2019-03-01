@@ -247,6 +247,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         }
         // The primary dept/school from LDAP is for internal use only within LibInsight. Not needed in email.
         if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
+            //requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
             data['field_750'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
         }
         // Create format's bibliographic info output and set appropriate LibInsight fields.
