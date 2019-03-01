@@ -244,6 +244,10 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         if (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value) {
             requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value + "<br>\n";
             data['field_691'] = frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value;
+            if (frmData.sect_requestor_information.fields.fld_other_lib_department_school.value && frmData.sect_requestor_information.fields.fld_other_lib_department_school.value !== "") {
+                requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_lib_department_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_other_lib_department_school.value + "<br>\n";
+                data['field_751'] = frmData.sect_requestor_information.fields.fld_other_lib_department_school.value;
+            }
         }
         // The primary dept/school from LDAP is for internal use only within LibInsight. Not needed in email.
         if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
