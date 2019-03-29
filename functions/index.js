@@ -40,6 +40,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         from: '',
         replyTo: '',
         to: '',
+        bcc: '',
         subject: '',
         text: '',
         html: ''
@@ -48,6 +49,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         from: '"UVA Library" <no-reply-library@Virginia.EDU>',
         replyTo: '"UVA Library" <NO-REPLY-LIBRARY@Virginia.EDU>',
         to: '',
+        bcc: '',
         subject: '',
         text: '',
         html: ''
@@ -187,33 +189,35 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.label + ":</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
                 data['field_708'] = frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value;
             }
-            if (frmData.sect_course_information.fields.fld_term.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_term.label + ":</strong> " + frmData.sect_course_information.fields.fld_term.value + "<br>\n";
-                data['field_648'] = frmData.sect_course_information.fields.fld_term.value;
-            }
-            if (frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.value + "<br>\n";
-                data['field_649'] = frmData.sect_course_information.fields.fld_course_e_g_mdst_3840.value;
-            }
-            if (frmData.sect_course_information.fields.fld_course_section_e_g_100.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_section_e_g_100.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_section_e_g_100.value + "<br>\n";
-                data['field_650'] = frmData.sect_course_information.fields.fld_course_section_e_g_100.value;
-            }
-            if (frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.label + ":</strong> " + frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.value + "<br>\n";
-                data['field_651'] = frmData.sect_course_information.fields.fld_alternate_course_e_g_dram_3840.value;
-            }
-            if (frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.label + ":</strong> " + frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value + "<br>\n";
-                data['field_652'] = frmData.sect_course_information.fields.fld_alternate_course_section_e_g_101.value;
-            }
-            if (frmData.sect_course_information.fields.fld_course_title.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_title.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_title.value + "<br>\n";
-                data['field_653'] = frmData.sect_course_information.fields.fld_course_title.value;
-            }
-            if (frmData.sect_course_information.fields.fld_enrollment.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_enrollment.label + ":</strong> " + frmData.sect_course_information.fields.fld_enrollment.value + "<br>\n";
-                data['field_654'] = frmData.sect_course_information.fields.fld_enrollment.value;
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value) {
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
+                    courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
+                    data['field_648'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
+                }
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
+                    courseInfo += "<strong>Course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
+                    data['field_649'] = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
+                }
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.section) {
+                    courseInfo += "<strong>Section:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.section + "<br>\n";
+                    data['field_650'] = frmData.sect_course_information.fields.fld_course_section_selector.value.section;
+                }
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.altCourse) {
+                    courseInfo += "<strong>Alternate course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.altCourse + "<br>\n";
+                    data['field_651'] = frmData.sect_course_information.fields.fld_course_section_selector.value.altCourse;
+                }
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.altSection) {
+                    courseInfo += "<strong>Alternate course section:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.altSection + "<br>\n";
+                    data['field_652'] = frmData.sect_course_information.fields.fld_course_section_selector.value.altSection;
+                }
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.title) {
+                    courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.title + "<br>\n";
+                    data['field_653'] = frmData.sect_course_information.fields.fld_course_section_selector.value.title;
+                }
+                if (frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment) {
+                    courseInfo += "<strong>Enrollment:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment + "<br>\n";
+                    data['field_654'] = frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment;
+                }
             }
             courseInfo += "</p><br>\n";
         }
@@ -420,7 +424,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             libOptions.to = 'purchase-requests@virginia.libanswers.com,data@virginia.edu';
             libOptions.subject += 'to Collection Librarians';
         } else {
-            if (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value && (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value != '')) {
+            if (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value && (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value !== '')) {
                 // Determine the routing based on the user department. Identify the subject librarian.
                 switch (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value) {
                     case 'African-American and African Studies':
@@ -631,8 +635,9 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         }
 
     }
-    // @TODO comment out the line below when ready to test final routing before going live.
+    // @TODO comment out the two lines below when ready to test final routing before going live.
     libOptions.to = 'lib-ux-testing@virginia.edu';
+    libOptions.bcc = '';
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo);
     promises[0] = mailTransport.sendMail(libOptions);
