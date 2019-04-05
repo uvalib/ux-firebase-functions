@@ -127,7 +127,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     let msg = fundCode = libraryLocation = "";
     if (frmData.fld_is_this_for_course_reserves_.value) {
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
-            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
+            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "eBook") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
                 fundCode = "UL-RESERVES";
                 if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value === "Clemons") {
                     libraryLocation = "Clemons";
@@ -136,7 +136,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
                 }
             }
         } else {
-            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "Music Recording") || (frmData.fld_format.value === "Music Score")) {
+            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "eBook") || (frmData.fld_format.value === "Music Recording") || (frmData.fld_format.value === "Music Score")) {
                 fundCode = "UL-REQUESTS";
                 libraryLocation = (frmData.fld_format.value !== "Music Recording") ? "LC CLASS" : "Music";
             }
@@ -167,16 +167,26 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         patronMsg += msg;
         data['field_683'] = (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available_.value === 1) ? 'Yes' : 'No';
     }
+    if (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value) {
+        msg = "<strong>" + frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.label + ":</strong> ";
+        msg += (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value === 1) ? 'Yes' : 'No';
+        msg += "<br>\n";
+        adminMsg += msg;
+        patronMsg += msg;
+        data['field_793'] = (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value === 1) ? 'Yes' : 'No';
+    }
     if (frmData.fld_which_type_of_request_is_this_.value) {
         msg = "<strong>Type of request:</strong> " + frmData.fld_which_type_of_request_is_this_.value + "<br>\n";
         adminMsg += msg;
         patronMsg += msg;
         data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
         // set the subject line prefix to the appropriate string based on this type of request but truncate the string.
-        subjPre = frmData.fld_which_type_of_request_is_this_.value.substring(0, frmData.fld_which_type_of_request_is_this_.value.indexOf('('));
+        subjPre = (frmData.fld_which_type_of_request_is_this_.value === 'Not needed immediately') ? 'Non-rush' : 'Rush';
     }
     if (frmData.fld_is_this_for_course_reserves_.value) {
-        adminMsg += "<strong>" + frmData.fld_is_this_for_course_reserves_.label + ":</strong> " + frmData.fld_is_this_for_course_reserves_.value + "<br>\n";
+        if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
+            adminMsg += "<strong>" + frmData.fld_is_this_for_course_reserves_.label + ":</strong> " + frmData.fld_is_this_for_course_reserves_.value + "<br>\n";
+        }
         data['field_647'] = frmData.fld_is_this_for_course_reserves_.value;
         // Build course information output section and set appropriate LibInsight fields.
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
@@ -343,10 +353,6 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         if (frmData.sect_bibliographic_information.fields.fld_edition_version.value) {
             biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_edition_version.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_edition_version.value + "<br>\n";
             data['field_676'] = frmData.sect_bibliographic_information.fields.fld_edition_version.value;
-        }
-        if (frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value) {
-            biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value + "<br>\n";
-            data['field_677'] = frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value;
         }
         if (frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not_.value) {
             biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not_.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not_.value + "<br>\n";
@@ -614,7 +620,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
                     case 'Statistics':
                     case 'Systems and Information Engineering':
                     case 'Women, Gender, & Sexuality':
-                        if (frmData.fld_format.value === 'Book') {
+                        if ((frmData.fld_format.value === 'Book') || (frmData.fld_format.value === "eBook")) {
                             libOptions.to += ',lib-orders@virginia.edu,lib-collections@virginia.edu';
                             libOptions.subject += 'to Acquisitions';
                         } else if (frmData.fld_format.value === 'Dissertation or Thesis') {
@@ -643,7 +649,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     promises[0] = mailTransport.sendMail(libOptions);
 
     // Prepare email confirmation content for patron
-    userOptions.subject = subjPre + ': Purchase Recommendation';
+    userOptions.subject = 'Purchase Recommendation';
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo;
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo);
