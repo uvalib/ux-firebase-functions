@@ -407,7 +407,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             }
             if ((frmData.fld_format.value === 'Journal Subscription') || (frmData.fld_format.value === 'Other')) {
                 libOptions.subject += 'to Reserves Librarian';
-            } else if (frmData.fld_format.value === 'Database') {
+            } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dissertation or Thesis')) {
                 libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
                 libOptions.subject += 'to Reserves Librarian';
             } else {
@@ -642,8 +642,8 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
 
     }
     // @TODO comment out the two lines below when ready to test final routing before going live.
-    libOptions.to = 'lib-ux-testing@virginia.edu';
-    libOptions.bcc = '';
+    //libOptions.to = 'lib-ux-testing@virginia.edu';
+    //libOptions.bcc = '';
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo);
     promises[0] = mailTransport.sendMail(libOptions);
