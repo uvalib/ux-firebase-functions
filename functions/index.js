@@ -410,6 +410,9 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dissertation or Thesis')) {
                 libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
                 libOptions.subject += 'to Reserves Librarian';
+            } else if (frmData.fld_format.value === 'Dissertation or Thesis') {
+                libOptions.to += ',lib-collections@virginia.edu';
+                libOptions.subject += 'to Reserves Librarian';
             } else {
                 libOptions.bcc += 'lib-orders@virginia.edu';
                 libOptions.subject += 'to Acquisitions';
