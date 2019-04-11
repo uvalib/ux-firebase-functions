@@ -647,8 +647,9 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     // @TODO comment out the two lines below when ready to test final routing before going live.
     //libOptions.to = 'lib-ux-testing@virginia.edu';
     //libOptions.bcc = '';
-    libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo;
-    libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo);
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo + reqText;
+    libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo + reqText);
     promises[0] = mailTransport.sendMail(libOptions);
 
     // Prepare email confirmation content for patron
@@ -726,12 +727,14 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
 
     // Prepare email content for Library staff
     // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+
     libOptions.from = frmData.fld_email_address.value;
     libOptions.replyTo = frmData.fld_email_address.value;
     libOptions.to = 'jlk4p@virginia.edu';
     libOptions.subject = 'Reference Referral';
-    libOptions.html = msg + inputs;
-    libOptions.text = stripHtml(msg + inputs);
+    libOptions.html = msg + inputs + reqText;
+    libOptions.text = stripHtml(msg + inputs + reqText);
     promises[0] = mailTransport.sendMail(libOptions);
 
     // Prepare email confirmation content for patron
@@ -740,8 +743,8 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     userOptions.replyTo = '"U.Va. Library: Govt. Info. Svcs." <govtinfo@groups.mail.virginia.edu>';
     userOptions.to = frmData.fld_email_address.value;
     userOptions.subject = 'Your reference referral';
-    userOptions.html = msg + inputs;
-    userOptions.text = stripHtml(msg + inputs);
+    userOptions.html = msg + inputs + reqText;
+    userOptions.text = stripHtml(msg + inputs + reqText);
     promises[1] = mailTransport.sendMail(userOptions);
 
     // Post to LibInsight
