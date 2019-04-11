@@ -176,12 +176,15 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         data['field_793'] = (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value === 1) ? 'Yes' : 'No';
     }
     if (frmData.fld_which_type_of_request_is_this_.value) {
-        msg = "<strong>Type of request:</strong> " + frmData.fld_which_type_of_request_is_this_.value + "<br>\n";
-        adminMsg += msg;
-        patronMsg += msg;
+        // This type of request input is only appropriate to book/ebook format emails.
+        if ((frmData.fld_format.value === 'Book') || (frmData.fld_format.value === 'eBook')) {
+            msg = "<strong>Type of request:</strong> " + frmData.fld_which_type_of_request_is_this_.value + "<br>\n";
+            adminMsg += msg;
+            patronMsg += msg;
+            // set the subject line prefix to the appropriate string
+            subjPre = (frmData.fld_which_type_of_request_is_this_.value === 'Not needed immediately') ? 'Non-rush' : 'Rush';
+        }
         data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
-        // set the subject line prefix to the appropriate string based on this type of request but truncate the string.
-        subjPre = (frmData.fld_which_type_of_request_is_this_.value === 'Not needed immediately') ? 'Non-rush' : 'Rush';
     }
     if (frmData.fld_is_this_for_course_reserves_.value) {
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
