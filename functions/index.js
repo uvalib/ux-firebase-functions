@@ -658,8 +658,8 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     // Prepare email confirmation content for patron
     userOptions.subject = 'Purchase Recommendation';
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
-    userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo;
-    userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo);
+    userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo + reqText;
+    userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
     promises[1] = mailTransport.sendMail(userOptions);
 
     // Post to LibInsight
