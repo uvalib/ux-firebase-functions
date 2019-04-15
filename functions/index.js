@@ -389,7 +389,9 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     console.log(`data: ${JSON.stringify(data)}`);
 
     // Prepare email content for Library staff
-    libOptions.subject = subjPre + ': Purchase Recommendation ';
+    libOptions.subject = subjPre + ': ';
+    libOptions.subject += (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
+    libOptions.subject += 'Purchase Recommendation ';
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     // Routing varies based on format and if for reserves...
@@ -656,7 +658,8 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     promises[0] = mailTransport.sendMail(libOptions);
 
     // Prepare email confirmation content for patron
-    userOptions.subject = 'Purchase Recommendation';
+    userOptions.subject = (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
+    userOptions.subject += 'Purchase Recommendation';
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
