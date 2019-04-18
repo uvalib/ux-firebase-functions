@@ -37,7 +37,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
 
     // Initialize email routing/content.
     let libraryOptions = {
-        from: '',
+        from: '"UVA Library" <no-reply-library@Virginia.EDU>',
         replyTo: '',
         to: '',
         bcc: '',
@@ -392,7 +392,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     libOptions.subject = subjPre + ': ';
     libOptions.subject += (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
     libOptions.subject += 'Purchase Recommendation ';
-    libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
+    //libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     // Routing varies based on format and if for reserves...
     if (frmData.fld_is_this_for_course_reserves_.value === 'Yes') {
@@ -735,7 +735,7 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
 
-    libOptions.from = frmData.fld_email_address.value;
+    //libOptions.from = frmData.fld_email_address.value;
     libOptions.replyTo = frmData.fld_email_address.value;
     libOptions.to = 'jlk4p@virginia.edu';
     libOptions.subject = 'Reference Referral';
