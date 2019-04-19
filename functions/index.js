@@ -193,7 +193,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         data['field_647'] = frmData.fld_is_this_for_course_reserves_.value;
         // Build course information output section and set appropriate LibInsight fields.
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
-            courseInfo += "<h2>" + frmData.sect_course_information.title + "</h2>\n\n<p>";
+            courseInfo += "<h3>" + frmData.sect_course_information.title + "</h3>\n\n<p>";
             if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.label + ":</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
                 data['field_655'] = frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value;
@@ -235,9 +235,9 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             courseInfo += "</p><br>\n";
         }
         // Create requestor info output content and set appropriate LibInsight fields.
-        requestorInfo += "<h2>";
+        requestorInfo += "<h3>";
         requestorInfo += (frmData.fld_is_this_for_course_reserves_.value === "Yes") ? "Requested" : "Suggested";
-        requestorInfo += " by</h2>\n\n<p>";
+        requestorInfo += " by</h3>\n\n<p>";
         if (frmData.sect_requestor_information.fields.fld_name.value) {
             requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
             data['field_687'] = frmData.sect_requestor_information.fields.fld_name.value;
@@ -272,7 +272,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             data['field_750'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
         }
         // Create format's bibliographic info output and set appropriate LibInsight fields.
-        biblioInfo += "<h2>" + frmData.sect_bibliographic_information.title + "</h2>\n\n<p>";
+        biblioInfo += "<h3>" + frmData.sect_bibliographic_information.title + "</h3>\n\n<p>";
         if (frmData.sect_bibliographic_information.fields.fld_isbn.value) {
             biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_isbn.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_isbn.value + "<br>\n";
             data['field_671'] = frmData.sect_bibliographic_information.fields.fld_isbn.value;
@@ -724,7 +724,7 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
         data['field_624'] = frmData.fld_email_address.value;
     }
     if (frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
-        inputs += "<h2>" + frmData.sect_question_or_comment.title + "</h2>\n\n<p>" + frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
+        inputs += "<h3>" + frmData.sect_question_or_comment.title + "</h3>\n\n<p>" + frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
         data['field_625'] = frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
     }
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
