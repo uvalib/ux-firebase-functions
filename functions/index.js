@@ -129,11 +129,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
             if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "eBook") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
                 fundCode = "UL-RESERVES";
-                if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value === "Clemons") {
-                    libraryLocation = "Clemons";
-                } else {
-                    libraryLocation = "LC CLASS"; // library whiere typical call number gets housed
-                }
+                libraryLocation = "LC CLASS"; // library where typical call number gets housed
             }
         } else {
             if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "eBook") || (frmData.fld_format.value === "Music Recording") || (frmData.fld_format.value === "Music Score")) {
