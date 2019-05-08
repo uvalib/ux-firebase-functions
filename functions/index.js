@@ -29,11 +29,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const reqDetails = JSON.parse(newRequest.submission);
     const formId = getFormId(reqDetails);
     const when = new Date(newRequest.timestamp);
-    //console.log(newRequest);
     console.log(`newRequest: ${newRequest.submission}`);
-    console.log(`details: ${JSON.stringify(reqDetails)}`);
     console.log(`form_id: ${formId}`);
-    console.log(`when: ${when.toString()}`);
 
     // Initialize email routing/content.
     let libraryOptions = {
@@ -60,6 +57,9 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     if (formId === 'purchase_requests') {
         console.log(`purchase request: ${requestId}`);
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'class_visits_and_instruction') {
+        console.log(`class visit and instruction request: ${requestId}`);
+        return processClassVisitAndInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         console.log(`gov docs request: ${requestId}`);
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
@@ -179,8 +179,12 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             patronMsg += msg;
             // set the subject line prefix to the appropriate string
             subjPre = (frmData.fld_which_type_of_request_is_this_.value === 'Not needed immediately') ? 'Non-rush' : 'Rush';
+        } else {
+            subjPre = 'Non-rush';
         }
         data['field_646'] = frmData.fld_which_type_of_request_is_this_.value;
+    } else {
+        subjPre = 'Non-rush';
     }
     if (frmData.fld_is_this_for_course_reserves_.value) {
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
@@ -382,7 +386,6 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             data['field_685'] = frmData.sect_bibliographic_information.fields.fld_description_comments.value;
         }
     }
-    console.log(`data: ${JSON.stringify(data)}`);
 
     // Prepare email content for Library staff
     libOptions.subject = subjPre + ': ';
@@ -703,6 +706,14 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         });
 }
 
+function processClassVisitAndInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
+    let inputs = msg = '';
+    let data = { 'field_DDD': reqId, 'ts_start': submitted };
+    let promises = [];
+    let results = {};
+    console.log(`frmData: ${JSON.stringify(frmData)}`);
+}
+
 function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let inputs = msg = '';
     let data = { 'field_619': reqId, 'ts_start': submitted };
@@ -724,7 +735,6 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
         data['field_625'] = frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
     }
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
-    console.log(`data: ${JSON.stringify(data)}`);
 
     // Prepare email content for Library staff
     // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
