@@ -142,11 +142,15 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     libraryLocation = (frmData.fld_format.value === "Music Score") ? "Music" : libraryLocation;
     adminMsg += "<strong>Fund code:</strong> " + fundCode + "<br>\n";
     adminMsg += "<strong>Library location:</strong> " + libraryLocation + "<br>\n";
-    if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
-        adminMsg += "<strong>Library reserve hold location:</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
-    }
-    if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
-        adminMsg += "<strong>Library reserve loan period:</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
+    if (frmData.fld_is_this_for_course_reserves_.value) {
+        if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
+            if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
+                adminMsg += "<strong>Library reserve hold location:</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
+            }
+            if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
+                adminMsg += "<strong>Library reserve loan period:</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
+            }
+        }
     }
 
     if (frmData.fld_format.value) {
