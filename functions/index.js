@@ -7,6 +7,7 @@ const stripHtml = require('string-strip-html');
 // See https://firebase.google.com/docs/functions/config-env
 const gmailEmail = functions.config().gmail.formsemail;
 const gmailPassword = functions.config().gmail.formspassword;
+const emailSecret = functions.config().email.secret;
 const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purchaserecommendation;
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 
