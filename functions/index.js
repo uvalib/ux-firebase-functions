@@ -399,7 +399,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     libOptions.subject = subjPre + ': ';
     libOptions.subject += (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
     libOptions.subject += 'Purchase Recommendation ';
-    libOptions.from = '"' + frmData.sect_requestor_information.fields.fld_name.value + '" <no-reply-library@Virginia.EDU>';
+    libOptions.from = '"' + frmData.sect_requestor_information.fields.fld_name.value + '" <' + frmData.sect_requestor_information.fields.fld_email_address.value + '>';
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     // Routing varies based on format and if for reserves...
     if (frmData.fld_is_this_for_course_reserves_.value === 'Yes') {
@@ -662,7 +662,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo + reqText);
     //promises[0] = mailTransport.sendMail(libOptions);
-    promises[0] = request.post({ url: emailUrl, form: libraryOptions });
+    promises[0] = request.post({ url: emailUrl, form: libOptions });
 
     // Prepare email confirmation content for patron
     userOptions.subject = (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
@@ -671,7 +671,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
     //promises[1] = mailTransport.sendMail(userOptions);
-    promises[1] = request.post({ url: emailUrl, form: patronOptions });
+    promises[1] = request.post({ url: emailUrl, form: userOptions });
 
     // Post to LibInsight
     promises[2] = request.post({
