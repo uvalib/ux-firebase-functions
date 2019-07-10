@@ -5,8 +5,8 @@ const stripHtml = require('string-strip-html');
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
-const gmailEmail = functions.config().gmail.formsemail;
-const gmailPassword = functions.config().gmail.formspassword;
+//const gmailEmail = functions.config().gmail.formsemail;
+//const gmailPassword = functions.config().gmail.formspassword;
 const emailSecret = functions.config().email.secret;
 const emailUrl = 'https://api.library.virginia.edu/mailer/mailer.js';
 const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purchaserecommendation;
@@ -14,13 +14,13 @@ const governmentInformationDatasetApi = functions.config().libinsighturl.governm
 
 // Configure the email transport using the default SMTP transport and a GMail account.
 // For other types of transports such as Sendgrid see https://nodemailer.com/transports/
-const mailTransport = nodemailer.createTransport({
+/*const mailTransport = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: gmailEmail,
         pass: gmailPassword,
     },
-});
+});*/
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
@@ -674,10 +674,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     promises[1] = request.post({ url: emailUrl, form: userOptions });
 
     // Post to LibInsight
-    promises[2] = request.post({
-        url: purchaseRecommendationDatasetApi,
-        form: data
-    });
+    promises[2] = request.post({ url: purchaseRecommendationDatasetApi, form: data });
 
     return Promise.all(promises)
         .then(responses => {
@@ -756,7 +753,8 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     libOptions.subject = 'Reference Referral';
     libOptions.html = msg + inputs + reqText;
     libOptions.text = stripHtml(msg + inputs + reqText);
-    promises[0] = mailTransport.sendMail(libOptions);
+    //    promises[0] = mailTransport.sendMail(libOptions);
+    promises[0] = request.post({ url: emailUrl, form: libOptions });
 
     // Prepare email confirmation content for patron
     msg = "<p>Your request (copied below) has been received and will be referred to Government Information Resources.</p><br>\n\n";
@@ -766,13 +764,11 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     userOptions.subject = 'Your reference referral';
     userOptions.html = msg + inputs + reqText;
     userOptions.text = stripHtml(msg + inputs + reqText);
-    promises[1] = mailTransport.sendMail(userOptions);
+    //    promises[1] = mailTransport.sendMail(userOptions);
+    promises[1] = request.post({ url: emailUrl, form: userOptions });
 
     // Post to LibInsight
-    promises[2] = request.post({
-        url: governmentInformationDatasetApi,
-        form: data
-    });
+    promises[2] = request.post({ url: governmentInformationDatasetApi, form: data });
 
     return Promise.all(promises)
         .then(responses => {
