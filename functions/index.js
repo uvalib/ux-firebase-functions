@@ -8,6 +8,7 @@ const stripHtml = require('string-strip-html');
 const gmailEmail = functions.config().gmail.formsemail;
 const gmailPassword = functions.config().gmail.formspassword;
 const emailSecret = functions.config().email.secret;
+const emailUrl = 'https://api.library.virginia.edu/mailer/mailer.js';
 const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purchaserecommendation;
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 
@@ -41,7 +42,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         bcc: '',
         subject: '',
         text: '',
-        html: ''
+        html: '',
+        secret: emailSecret
     };
     let patronOptions = {
         from: '"UVA Library" <no-reply-library@Virginia.EDU>',
@@ -50,7 +52,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         bcc: '',
         subject: '',
         text: '',
-        html: ''
+        html: '',
+        secret: emailSecret
     };
 
     // Identify the request type and process...
@@ -658,7 +661,8 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo + reqText);
-    promises[0] = mailTransport.sendMail(libOptions);
+    //promises[0] = mailTransport.sendMail(libOptions);
+    promises[0] = request.post({ url: emailUrl, form: libraryOptions });
 
     // Prepare email confirmation content for patron
     userOptions.subject = (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
@@ -666,7 +670,8 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
-    promises[1] = mailTransport.sendMail(userOptions);
+    //promises[1] = mailTransport.sendMail(userOptions);
+    promises[1] = request.post({ url: emailUrl, form: patronOptions });
 
     // Post to LibInsight
     promises[2] = request.post({
