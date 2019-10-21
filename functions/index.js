@@ -58,7 +58,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
 
     // Identify the request type and process...
     const formFields = getFormFields(reqDetails);
-    if (formId === 'purchase_requests') {
+    if ((formId === 'purchase_requests') || (formId === 'purchase_request_limited_functio')) {
         console.log(`purchase request: ${requestId}`);
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'class_visits_and_instruction') {
