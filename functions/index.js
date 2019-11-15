@@ -417,7 +417,7 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
             if (frmData.fld_format.value === 'Music Recording') {
                 libOptions.to += ',lb-mu-recordings@virginia.edu';
             }
-            if ((frmData.fld_format.value === 'Journal Subscription') || (frmData.fld_format.value === 'Other')) {
+            if ((frmData.fld_format.value === 'Journal Subscription') || (frmData.fld_format.value === 'Other') || (frmData.fld_format.value === 'Other (No print books.)')) {
                 libOptions.subject += 'to Reserves Librarian';
             } else if (frmData.fld_format.value === 'Database') {
                 libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
