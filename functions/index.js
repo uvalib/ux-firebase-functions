@@ -11,16 +11,7 @@ const emailSecret = functions.config().email.secret;
 const emailUrl = 'https://api.library.virginia.edu/mailer/mailer.js';
 const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purchaserecommendation;
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
-
-// Configure the email transport using the default SMTP transport and a GMail account.
-// For other types of transports such as Sendgrid see https://nodemailer.com/transports/
-/*const mailTransport = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: gmailEmail,
-        pass: gmailPassword,
-    },
-});*/
+const specCollInstructionDatasetApi = functions.config().libinsighturl.speccollinstruction;
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
@@ -63,7 +54,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'class_visits_and_instruction') {
         console.log(`class visit and instruction request: ${requestId}`);
-        return processClassVisitAndInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
+        return processSpecCollInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         console.log(`gov docs request: ${requestId}`);
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
@@ -661,7 +652,6 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo + reqText);
-    //promises[0] = mailTransport.sendMail(libOptions);
     promises[0] = request.post({ url: emailUrl, form: libOptions });
 
     // Prepare email confirmation content for patron
@@ -670,7 +660,6 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
-    //promises[1] = mailTransport.sendMail(userOptions);
     promises[1] = request.post({ url: emailUrl, form: userOptions });
 
     // Post to LibInsight
@@ -713,11 +702,15 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
         });
 }
 
-function processClassVisitAndInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
+function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let inputs = msg = '';
-    let data = { 'field_DDD': reqId, 'ts_start': submitted };
+    let data = { 'field_874': reqId, 'ts_start': submitted };
     let promises = [];
     let results = {};
+    // @TODO comment out the two lines below when ready to test final routing before going live.
+    //libOptions.to = 'lib-ux-testing@virginia.edu';
+    //libOptions.bcc = '';
+    console.log('Special Collections Instruction request:');
     console.log(`frmData: ${JSON.stringify(frmData)}`);
 }
 
@@ -753,7 +746,6 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     libOptions.subject = 'Reference Referral';
     libOptions.html = msg + inputs + reqText;
     libOptions.text = stripHtml(msg + inputs + reqText);
-    //    promises[0] = mailTransport.sendMail(libOptions);
     promises[0] = request.post({ url: emailUrl, form: libOptions });
 
     // Prepare email confirmation content for patron
@@ -764,7 +756,6 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     userOptions.subject = 'Your reference referral';
     userOptions.html = msg + inputs + reqText;
     userOptions.text = stripHtml(msg + inputs + reqText);
-    //    promises[1] = mailTransport.sendMail(userOptions);
     promises[1] = request.post({ url: emailUrl, form: userOptions });
 
     // Post to LibInsight
