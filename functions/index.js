@@ -1,7 +1,9 @@
 const functions = require('firebase-functions');
+const storage = require('firebase-storage');
 const nodemailer = require('nodemailer');
 const request = require('request');
 const stripHtml = require('string-strip-html');
+const moment = require('moment');
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -63,6 +65,71 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     }
 
 });
+
+function choiceDateTimeToString(choice) {
+    let str = '';
+    if (choice.preferredDateTime.date !== "") {
+        str += "<p><strong>Choice " + choice.nth + "</strong><br>\n";
+        str += "Date: " + convDateYMDtoMDY(choice.preferredDateTime.date) + "<br>\n";
+        if (choice.preferredDateTime.startTime !== "") {
+            str += "Begin time: " + convTime24to12(choice.preferredDateTime.startTime) + "<br>\n";
+        }
+        if (choice.preferredDateTime.endTime !== "") {
+            str += "End time: " + convTime24to12(choice.preferredDateTime.endTime) + "<br>\n";
+        }
+        str += "</p>\n";
+    }
+    return str;
+}
+
+function convDateYMDtoMDY(date) {
+    return moment(date,"YYYY-MM-DD").format("MM-DD-YYYY");
+}
+
+function convTime24to12(time) {
+    let date = moment.format("YYYY-MM-DD ");
+    return moment(date+time,"YYYY-MM-DD HH:mm").format("hh:mm A");
+}
+
+function deleteFirebaseFile(filename) {
+    let storageRef = firebase.storage().ref();
+    let delFileRef = storageRef.child('form_file_uploads/'+filename);
+    delFileRef.delete().then(function() {
+        console.log(`File ${filename} successfully deleted.`);
+        return true;
+    }).catch(function(error) {
+        console.log(`Error deleting storage of ${filename}`+error.toString());
+    });
+}
+
+function downloadContentFromUrl (url) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.responseType = 'blob';
+      xhr.onreadystatechange = function(event) {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error("Error for " + url + ": " + xhr.status));
+          }
+        }
+      };
+      xhr.send();
+    });
+}
+
+function getBase64ContentFromStorage(filename) {
+    let storageRef = firebase.storage().ref();
+    storageRef().child('form_file_uploads/'+filename).getDownloadURL().then(downloadContentFromUrl)
+        .then(function(blob) {
+            return blob.btoa();
+        })
+        .catch(function(error) {
+            console.log(`Error accessing storage of ${filename}:`+error.toString());
+        });
+}
 
 function getFormId(formDefn) {
     let i = 0;
@@ -703,15 +770,236 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
 }
 
 function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let inputs = msg = '';
+    let contactInfo = courseInfo = sessionInfo = scheduleInfo = commentInfo = '';
+    let adminMsg = "<p><strong>* This email may contain an attachment. It is recommended that you scan the attachment to make sure it does not contain a virus.</strong></p>\n\n";
+    let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
+    patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu/434-243-8194) or Heather Riser (mhm8m@virginia.edu/434-924- 4966) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
     let promises = [];
     let results = {};
+
+    // Create contact info output content and set appropriate LibInsight fields.
+    contactInfo += "\n<h3>"+frmData.sect_your_contact_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_your_contact_information.fields.fld_name.value) {
+        contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_name.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_name.value + "<br>\n";
+        data['field_877'] = frmData.sect_your_contact_information.fields.fld_name.value;
+    }
+    if (frmData.sect_your_contact_information.fields.fld_email_address.value) {
+        contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_email_address.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_email_address.value + "<br>\n";
+        data['field_878'] = frmData.sect_your_contact_information.fields.fld_email_address.value;
+    }
+    if (frmData.sect_your_contact_information.fields.fld_phone_number.value) {
+        contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_phone_number.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_phone_number.value + "<br>\n";
+        data['field_879'] = frmData.sect_your_contact_information.fields.fld_phone_number.value;
+    }
+    if (frmData.sect_your_contact_information.fields.fld_department.value) {
+        contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_department.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_department.value + "<br>\n";
+        data['field_880'] = frmData.sect_your_contact_information.fields.fld_department.value;
+    }
+    if (frmData.sect_your_contact_information.fields.fld_uva_affiliation.value) {
+        contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_uva_affiliation.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_uva_affiliation.value + "<br>\n";
+        data['field_881'] = frmData.sect_your_contact_information.fields.fld_uva_affiliation.value;
+        if (frmData.sect_your_contact_information.fields.fld_uva_affiliation.value === "Unaffiliated" 
+            && frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.value) {
+            contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.value + "<br>\n";
+            data['field_882'] = frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.value;
+        }
+    }
+    contactInfo += "</p><br>\n";
+    // Create course info output content and set appropriate LibInsight fields.
+    courseInfo += "\n<h3>"+frmData.sect_course_information_if_applicable_.title+"</h3>\n\n<p>";
+    if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value) {
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term) {
+            courseInfo += "<strong>Term</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term + "<br>\n";
+            data['field_883'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term;
+        }
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.course) {
+            courseInfo += "<strong>Course</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.course + "<br>\n";
+            data['field_884'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.course;
+        }
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.section) {
+            courseInfo += "<strong>Course section</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.section + "<br>\n";
+            data['field_885'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.section;
+        }
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.title) {
+            courseInfo += "<strong>Course title</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.title + "<br>\n";
+            data['field_886'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.title;
+        }
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment) {
+            courseInfo += "<strong>Enrollment</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment + "<br>\n";
+            data['field_887'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment;
+        }
+    }
+    if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
+        let firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
+        if (firebaseFilename !== "") {
+            let origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+            courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
+            data['field_941'] = firebaseFilename;
+            // @TODO create file attachment for the email by retrieving the content from Firebase storage
+            libOptions.attachments = Array({
+                filename: origFilename,
+                content: getBase64ContentFromStorage(firebaseFilename),
+                encoding: 'base64'
+            });
+            userOptions.attachments = Array({
+                filename: origFilename,
+                content: getBase64ContentFromStorage(firebaseFilename),
+                encoding: 'base64'
+            });
+        }
+    }
+    courseInfo += "</p><br>\n";
+    // Create session info output content and set appropriate LibInsight fields.
+    sessionInfo += "\n<h3>"+frmData.sect_session_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.length > 0) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.label + "</strong><br>\n";
+        sessionInfo += "<ul>";
+        for (let i=0; i < frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.length; i++) {
+            sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value[i] + "</li>\n";
+        }
+        sessionInfo += "</ul><br>\n";
+        data['field_888'] = frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.join(', ');
+        if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.indexOf("Course related instruction") > -1) {
+            sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_for_course_related_instruction.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_for_course_related_instruction.value + "<br>\n";
+            data['field_889'] = frmData.sect_session_information.fields.fld_for_course_related_instruction.value;
+        }
+    }
+    if (frmData.sect_session_information.fields.fld_number_of_participants.value) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_number_of_participants.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_number_of_participants.value + "<br>\n";
+        data['field_890'] = frmData.sect_session_information.fields.fld_number_of_participants.value;
+    }
+    if (frmData.sect_session_information.fields.fld_level_of_participants.value.length > 0) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_level_of_participants.label + "</strong><br>\n";
+        sessionInfo += "<ul>";
+        for (let i=0; i < frmData.sect_session_information.fields.fld_level_of_participants.value.length; i++) {
+            sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_level_of_participants.value[i] + "</li>\n";
+        }
+        sessionInfo += "</ul><br>\n";
+        data['field_891'] = frmData.sect_session_information.fields.fld_level_of_participants.value.join(', ');
+        if (frmData.sect_session_information.fields.fld_level_of_participants.value.indexOf("Unaffiliated") > -1) {
+            if (frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.value) {
+                sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.value + "<br>\n";
+                data['field_892'] = frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.value;
+            }
+        }
+    }
+    if (frmData.sect_session_information.fields.fld_explanation_of_instructional_needs.value) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_explanation_of_instructional_needs.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_explanation_of_instructional_needs.value + "<br>\n";
+        data['field_893'] = frmData.sect_session_information.fields.fld_explanation_of_instructional_needs.value;
+    }
+    if (frmData.sect_session_information.fields.fld_goals_for_session.value) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_goals_for_session.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_goals_for_session.value + "<br>\n";
+        data['field_894'] = frmData.sect_session_information.fields.fld_goals_for_session.value;
+    }
+    if (frmData.sect_session_information.fields.fld_are_there_specific_materials_you_would_like_to_cover_.value) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_are_there_specific_materials_you_would_like_to_cover_.label + ":</strong><br>\n";
+        sessionInfo += (frmData.sect_session_information.fields.fld_are_there_specific_materials_you_would_like_to_cover_.value === 1) ? 'Yes' : 'No';
+        sessionInfo += "<br>\n";
+        data['field_895'] = (frmData.sect_session_information.fields.fld_are_there_specific_materials_you_would_like_to_cover_.value === 1) ? 'Yes' : 'No';
+    }
+    if (frmData.sect_session_information.fields.fld_do_you_need_audiovisual_support_for_your_class_.value) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_do_you_need_audiovisual_support_for_your_class_.label + ":</strong><br>\n";
+        sessionInfo += (frmData.sect_session_information.fields.fld_do_you_need_audiovisual_support_for_your_class_.value === 1) ? 'Yes' : 'No';
+        sessionInfo += "<br>\n";
+        data['field_896'] = (frmData.sect_session_information.fields.fld_do_you_need_audiovisual_support_for_your_class_.value === 1) ? 'Yes' : 'No';
+    }
+    sessionInfo += "</p><br>\n";
+    // Create session info output content and set appropriate LibInsight fields.
+    scheduleInfo += "\n<h3>"+frmData.sect_scheduling_information.title+"</h3>\n\n";
+    if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length > 0) {
+        let numSessions = 0;
+        for (let i=0; i < frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length; i++) {
+            if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data[i].show) numsessions++;
+        }
+        scheduleInfo += "<p><strong>Sessions requested</strong><br>\n" + numSessions + "<br>\n</p>";
+        data['field_897'] = numSessions;
+        for (let i=0; i < frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length; i++) {
+            let data = frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data[i];
+            if (data.show) {
+                let sessionText = sessionLengthAndChoicesToString(data);
+                scheduleInfo += sessionText + "<hr>";
+                if (session.nth === 1) {
+                    data['field_898'] = stripHtml(sessionText);
+                } else if (session.nth === 2) {
+                    data['field_899'] = stripHtml(sessionText);
+                } else if (session.nth === 3) {
+                    data['field_900'] = stripHtml(sessionText);
+                } else if (session.nth === 4) {
+                    data['field_901'] = stripHtml(sessionText);
+                } else if (session.nth === 5) {
+                    data['field_902'] = stripHtml(sessionText);
+                } else {
+                    data['field_903'] = stripHtml(sessionText);
+                }
+            }
+        }
+    }
+    scheduleInfo += "<br>\n";
+    // Create comment info output if there is any.
+    if (frmData.fld_comments.value) {
+        commentInfo += "<br>\n";
+        commentInfo += "<strong>" + frmData.fld_comments.label + "</strong><br>\n" + frmData.fld_comments.value + "<br>\n";
+        data['field_904'] = frmData.fld_comments.value;
+    }
+
     // @TODO comment out the two lines below when ready to test final routing before going live.
-    //libOptions.to = 'lib-ux-testing@virginia.edu';
-    //libOptions.bcc = '';
-    console.log('Special Collections Instruction request:');
-    console.log(`frmData: ${JSON.stringify(frmData)}`);
+    libOptions.to = 'lib-ux-testing@virginia.edu';
+    libOptions.bcc = 'jlk4p@virginia.edu';
+    libOptions.subject = 'Small Special Collections Instruction Request: '+frmData.sect_your_contact_information.fields.fld_name.value;
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
+    libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
+    promises[0] = request.post({ url: emailUrl, form: libOptions });
+
+    // Prepare email confirmation content for patron
+    userOptions.subject = 'Small Special Collections Instruction Request';
+    userOptions.to = frmData.sect_your_contact_information.fields.fld_email_address.value;
+    userOptions.html = patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
+    userOptions.text = stripHtml(patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
+    promises[1] = request.post({ url: emailUrl, form: userOptions });
+
+    // Post to LibInsight
+    promises[2] = request.post({ url: specCollInstructionDatasetApi, form: data });
+    
+    return Promise.all(promises)
+        .then(responses => {
+            let errors = false;
+            if (responses[0].err) {
+                errors = true;
+                console.log(`Request ${reqId} library notification failed: ${responses[0].err.toString()}`);
+            } else {
+                results.library_notification = 'succeeded';
+            }
+            if (responses[1].err) {
+                errors = true;
+                console.log(`Request ${reqId} patron notification failed: ${responses[1].err.toString()}`);
+            } else {
+                results.patron_notification = 'succeeded';
+            }
+            if (responses[2].err) {
+                errors = true;
+                console.log(`Request ${reqId} LibInsight POST failed: ${responses[2].err.toString()}`);
+            } else {
+                if (responses[2].body.response) {
+                    results.LibInsight = 'succeeded';
+                } else {
+                    errors = true;
+                    console.log(`Request ${reqId} LibInsight POST failed: ${JSON.stringify(responses[2].response)}`);
+                }
+            }
+            if (errors) {
+                return errors;
+            } else {
+                console.log(`results: ${JSON.stringify(results)}`);
+                return results;
+            }
+        })
+        .catch(error => {
+            // empty results would be adequate to indicate an error
+            console.log(`error: ${JSON.stringify(error)}`);
+            return error;
+        });
 }
 
 function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
@@ -796,4 +1084,17 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
             console.log(`error: ${JSON.stringify(error)}`);
             return error;
         });
+}
+
+function sessionLengthAndChoicesToString(data) {
+    let str = '';
+    str += "<h4>Session " + data.nth + "</h4>\n\n";
+    if (data.session.sessionLength !== "") {
+        str += "<p><strong>Session length (minutes)</strong><br>\n" + data.session.sessionLength + "</p>\n\n";
+    }
+    for (let j=0; j < data.session.sessionDateTime.length; j++) {
+        let session = data.session.sessionDateTime[j];
+        str += choiceDateTimeToString(data.session.sessionDateTime[j]);
+    }
+    return str;
 }
