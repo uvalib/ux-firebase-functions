@@ -94,16 +94,16 @@ function convTime24to12(time) {
 function deleteFirebaseFile(filename) {
     let storageRef = firebase.storage().ref();
     let delFileRef = storageRef.child('form_file_uploads/'+filename);
-    delFileRef.delete().then(function() {
+    delFileRef.delete().then(() => {
         console.log(`File ${filename} successfully deleted.`);
         return true;
-    }).catch(function(error) {
+    }).catch((error) => {
         console.log(`Error deleting storage of ${filename}`+error.toString());
     });
 }
 
 function downloadContentFromUrl (url) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(((resolve, reject) => {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.responseType = 'blob';
@@ -117,16 +117,16 @@ function downloadContentFromUrl (url) {
         }
       };
       xhr.send();
-    });
+    }));
 }
 
 function getBase64ContentFromStorage(filename) {
     let storageRef = firebase.storage().ref();
     storageRef().child('form_file_uploads/'+filename).getDownloadURL().then(downloadContentFromUrl)
-        .then(function(blob) {
+        .then((blob) => {
             return blob.btoa();
         })
-        .catch(function(error) {
+        .catch((error) => {
             console.log(`Error accessing storage of ${filename}:`+error.toString());
         });
 }
