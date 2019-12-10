@@ -1,5 +1,4 @@
 const functions = require('firebase-functions');
-const storage = require('firebase-storage');
 const nodemailer = require('nodemailer');
 const request = require('request');
 const stripHtml = require('string-strip-html');
