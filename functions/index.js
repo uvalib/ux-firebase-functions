@@ -1,5 +1,7 @@
 const functions = require('firebase-functions');
-const nodemailer = require('nodemailer');
+const {Storage} = require('@google-cloud/storage');
+const storage = new Storage();
+const bucket = storage.bucket('uvalib-api.appspot.com'); 
 const request = require('request');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
@@ -91,42 +93,24 @@ function convTime24to12(time) {
 }
 
 function deleteFirebaseFile(filename) {
-    let storageRef = firebase.storage().ref();
-    let delFileRef = storageRef.child('form_file_uploads/'+filename);
-    delFileRef.delete().then(() => {
-        console.log(`File ${filename} successfully deleted.`);
-        return true;
-    }).catch((error) => {
-        console.log(`Error deleting storage of ${filename}`+error.toString());
+    let file = bucket.file('form_file_uploads/'+filename);
+    file.delete((error,response) => {
+        if (error) {
+            console.log(`Error deleting storage of ${filename}: `+error.toString());
+        } else {
+            console.log(`File ${filename} deleted: `+response.toString());
+        }
     });
 }
 
-function downloadContentFromUrl (url) {
-    return new Promise(((resolve, reject) => {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', url);
-      xhr.responseType = 'blob';
-      xhr.onreadystatechange = function(event) {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            resolve(xhr.response);
-          } else {
-            reject(new Error("Error for " + url + ": " + xhr.status));
-          }
-        }
-      };
-      xhr.send();
-    }));
-}
-
 function getBase64ContentFromStorage(filename) {
-    let storageRef = firebase.storage().ref();
-    storageRef().child('form_file_uploads/'+filename).getDownloadURL().then(downloadContentFromUrl)
-        .then((blob) => {
-            return blob.btoa();
+    let file = bucket.file('form_file_uploads/'+filename);
+    file.download()
+        .then((data) => {
+            return data[0].btoa();
         })
         .catch((error) => {
-            console.log(`Error accessing storage of ${filename}:`+error.toString());
+            console.log(`Error downloading ${filename}:`+error.toString());
         });
 }
 
