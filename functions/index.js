@@ -894,7 +894,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     if (frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length > 0) {
         let numSessions = 0;
         for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
-            if (frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i].show) numsessions++;
+            if (frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i].show) numSessions++;
         }
         scheduleInfo += "<p><strong>Sessions requested</strong><br>\n" + numSessions + "<br>\n</p>";
         data['field_897'] = numSessions;
