@@ -5,6 +5,7 @@ const bucket = storage.bucket('uvalib-api.appspot.com');
 const request = require('request');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
+const base64 = require('base-64');
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -103,11 +104,11 @@ function deleteFirebaseFile(filename) {
     });
 }
 
-function getBase64ContentFromStorage(filename) {
+function getFileContentFromStorage(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
     file.download()
         .then((data) => {
-            return data[0].btoa();
+            return data[0];
         })
         .catch((error) => {
             console.log(`Error downloading ${filename}:`+error.toString());
@@ -148,6 +149,8 @@ function getSectionFields(section) {
     let fields = {};
     for (var key in section) {
         if (key.match(/^fld_/)) {
+            console.log(key);
+            console.log(section[key].value);
             fields[key] = { label: section[key].title, value: section[key].value };
         }
         // @TODO address fieldset down the road?
@@ -819,15 +822,16 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
             let origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
             courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
             data['field_941'] = firebaseFilename;
+            fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
             // @TODO create file attachment for the email by retrieving the content from Firebase storage
             libOptions.attachments = Array({
                 filename: origFilename,
-                content: getBase64ContentFromStorage(firebaseFilename),
+                content: fileContent,
                 encoding: 'base64'
             });
             userOptions.attachments = Array({
                 filename: origFilename,
-                content: getBase64ContentFromStorage(firebaseFilename),
+                content: fileContent,
                 encoding: 'base64'
             });
         }
@@ -835,14 +839,14 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     courseInfo += "</p><br>\n";
     // Create session info output content and set appropriate LibInsight fields.
     sessionInfo += "\n<h3>"+frmData.sect_session_information.title+"</h3>\n\n<p>";
-    if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.length > 0) {
+    if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.label + "</strong><br>\n";
         sessionInfo += "<ul>";
-        for (let i=0; i < frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.length; i++) {
-            sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value[i] + "</li>\n";
+        for (const key in frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value) {
+            sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value[key] + "</li>\n";
         }
         sessionInfo += "</ul><br>\n";
-        data['field_888'] = frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.join(', ');
+        data['field_888'] = Object.keys(frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value).join(', ');
         if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.indexOf("Course related instruction") > -1) {
             sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_for_course_related_instruction.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_for_course_related_instruction.value + "<br>\n";
             data['field_889'] = frmData.sect_session_information.fields.fld_for_course_related_instruction.value;
@@ -852,15 +856,15 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_number_of_participants.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_number_of_participants.value + "<br>\n";
         data['field_890'] = frmData.sect_session_information.fields.fld_number_of_participants.value;
     }
-    if (frmData.sect_session_information.fields.fld_level_of_participants.value.length > 0) {
+    if (frmData.sect_session_information.fields.fld_level_of_participants.value) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_level_of_participants.label + "</strong><br>\n";
         sessionInfo += "<ul>";
-        for (let i=0; i < frmData.sect_session_information.fields.fld_level_of_participants.value.length; i++) {
-            sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_level_of_participants.value[i] + "</li>\n";
+        for (const key in frmData.sect_session_information.fields.fld_level_of_participants.value) {
+            sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_level_of_participants.value[key] + "</li>\n";
         }
         sessionInfo += "</ul><br>\n";
-        data['field_891'] = frmData.sect_session_information.fields.fld_level_of_participants.value.join(', ');
-        if (frmData.sect_session_information.fields.fld_level_of_participants.value.indexOf("Unaffiliated") > -1) {
+        data['field_891'] = Object.keys(frmData.sect_session_information.fields.fld_level_of_participants.value).join(', ');
+        if (frmData.sect_session_information.fields.fld_level_of_participants.value.hasOwnProperty("Unaffiliated")) {
             if (frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.value) {
                 sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.value + "<br>\n";
                 data['field_892'] = frmData.sect_session_information.fields.fld_name_of_group_or_institution_if_applicable_.value;
@@ -890,7 +894,8 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     sessionInfo += "</p><br>\n";
     // Create session info output content and set appropriate LibInsight fields.
     scheduleInfo += "\n<h3>"+frmData.sect_scheduling_information.title+"</h3>\n\n";
-    if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length > 0) {
+    console.log(frmData.sect_scheduling_information);
+/*    if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length > 0) {
         let numSessions = 0;
         for (let i=0; i < frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length; i++) {
             if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data[i].show) numsessions++;
@@ -917,7 +922,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                 }
             }
         }
-    }
+    }*/
     scheduleInfo += "<br>\n";
     // Create comment info output if there is any.
     if (frmData.fld_comments.value) {
