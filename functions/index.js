@@ -9,8 +9,6 @@ const base64 = require('base-64');
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
-//const gmailEmail = functions.config().gmail.formsemail;
-//const gmailPassword = functions.config().gmail.formspassword;
 const emailSecret = functions.config().email.secret;
 const emailUrl = 'https://api.library.virginia.edu/mailer/mailer.js';
 const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purchaserecommendation;
@@ -27,7 +25,6 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     const formId = getFormId(reqDetails);
     const when = new Date(newRequest.timestamp);
     console.log(`newRequest: ${newRequest.submission}`);
-    console.log(`form_id: ${formId}`);
 
     // Initialize email routing/content.
     let libraryOptions = {
@@ -54,13 +51,13 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     // Identify the request type and process...
     const formFields = getFormFields(reqDetails);
     if ((formId === 'purchase_requests') || (formId === 'purchase_request_limited_functio')) {
-        console.log(`purchase request: ${requestId}`);
+        console.log(`${formId}: ${requestId}`);
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'class_visits_and_instruction') {
-        console.log(`class visit and instruction request: ${requestId}`);
+        console.log(`${formId}: ${requestId}`);
         return processSpecCollInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
-        console.log(`gov docs request: ${requestId}`);
+        console.log(`${formId}: ${requestId}`);
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
@@ -106,12 +103,14 @@ function deleteFirebaseFile(filename) {
 
 function getFileContentFromStorage(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
+    console.log(file);
     file.download()
         .then((data) => {
+            console.log(data);
             return data[0];
         })
         .catch((error) => {
-            console.log(`Error downloading ${filename}:`+error.toString());
+            console.log(`Error downloading ${filename}: `+error.toString());
         });
 }
 
@@ -149,8 +148,6 @@ function getSectionFields(section) {
     let fields = {};
     for (var key in section) {
         if (key.match(/^fld_/)) {
-            console.log(key);
-            console.log(section[key].value);
             fields[key] = { label: section[key].title, value: section[key].value };
         }
         // @TODO address fieldset down the road?
@@ -165,7 +162,6 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     let promises = [];
     let results = {};
 
-    console.log(`frmData: ${JSON.stringify(frmData)}`);
     // Prepare email message body and LibInsight data parameters
     // The admin message has a few fields out of order placed at the top.
     // Fund Code and library location are internal fields defined for use in routing to Acquisitions and Collections Mgmt.
@@ -763,6 +759,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     let data = { 'field_874': reqId, 'ts_start': submitted };
     let promises = [];
     let results = {};
+    console.log(`frmData: ${JSON.stringify(frmData)}`);
 
     // Create contact info output content and set appropriate LibInsight fields.
     contactInfo += "\n<h3>"+frmData.sect_your_contact_information.title+"</h3>\n\n<p>";
@@ -818,7 +815,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
-                let origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+                const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
                 fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
@@ -842,7 +839,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.label + "</strong><br>\n";
         sessionInfo += "<ul>";
-        for (const key in frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value) {
+        for (let key in frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value) {
             sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value[key] + "</li>\n";
         }
         sessionInfo += "</ul><br>\n";
@@ -859,7 +856,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     if (frmData.sect_session_information.fields.fld_level_of_participants.value) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_level_of_participants.label + "</strong><br>\n";
         sessionInfo += "<ul>";
-        for (const key in frmData.sect_session_information.fields.fld_level_of_participants.value) {
+        for (let key in frmData.sect_session_information.fields.fld_level_of_participants.value) {
             sessionInfo += "<li>" + frmData.sect_session_information.fields.fld_level_of_participants.value[key] + "</li>\n";
         }
         sessionInfo += "</ul><br>\n";
@@ -894,8 +891,8 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     sessionInfo += "</p><br>\n";
     // Create session info output content and set appropriate LibInsight fields.
     scheduleInfo += "\n<h3>"+frmData.sect_scheduling_information.title+"</h3>\n\n";
-    console.log(frmData.sect_scheduling_information);
-/*    if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length > 0) {
+    console.log(JSON.stringify(frmData.sect_scheduling_information.fld_session_date_time_preferences));
+    if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length > 0) {
         let numSessions = 0;
         for (let i=0; i < frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length; i++) {
             if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data[i].show) numsessions++;
@@ -922,7 +919,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                 }
             }
         }
-    }*/
+    }
     scheduleInfo += "<br>\n";
     // Create comment info output if there is any.
     if (frmData.fld_comments.value) {
@@ -965,10 +962,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
             } else {
                 results.patron_notification = 'succeeded';
             }
-            if (responses[2].err) {
-                errors = true;
-                console.log(`Request ${reqId} LibInsight POST failed: ${responses[2].err.toString()}`);
-            } else {
+            if (responses[2].body) {
                 if (responses[2].body.response) {
                     results.LibInsight = 'succeeded';
                 } else {
@@ -996,7 +990,6 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     let promises = [];
     let results = {};
 
-    console.log(`frmData: ${JSON.stringify(frmData)}`);
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_name.value) {
         inputs += "<strong>" + frmData.fld_name.label + ":</strong> " + frmData.fld_name.value + "<br>\n";
