@@ -892,15 +892,15 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     // Create session info output content and set appropriate LibInsight fields.
     scheduleInfo += "\n<h3>"+frmData.sect_scheduling_information.title+"</h3>\n\n";
     console.log(JSON.stringify(frmData.sect_scheduling_information.fld_session_date_time_preferences));
-    if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length > 0) {
+    if (frmData.sect_scheduling_information.fields.fields.fld_session_date_time_preferences.value.data && frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length > 0) {
         let numSessions = 0;
-        for (let i=0; i < frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length; i++) {
-            if (frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data[i].show) numsessions++;
+        for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
+            if (frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i].show) numsessions++;
         }
         scheduleInfo += "<p><strong>Sessions requested</strong><br>\n" + numSessions + "<br>\n</p>";
         data['field_897'] = numSessions;
-        for (let i=0; i < frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data.length; i++) {
-            let data = frmData.sect_scheduling_information.fld_session_date_time_preferences.value.data[i];
+        for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
+            let data = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
             if (data.show) {
                 let sessionText = sessionLengthAndChoicesToString(data);
                 scheduleInfo += sessionText + "<hr>";
