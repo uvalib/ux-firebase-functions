@@ -847,7 +847,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
         }
         sessionInfo += "</ul><br>\n";
         data['field_888'] = Object.keys(frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value).join(', ');
-        if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.indexOf("Course related instruction") > -1) {
+        if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value.hasOwnProperty("Course related instruction")) {
             sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_for_course_related_instruction.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_for_course_related_instruction.value + "<br>\n";
             data['field_889'] = frmData.sect_session_information.fields.fld_for_course_related_instruction.value;
         }
