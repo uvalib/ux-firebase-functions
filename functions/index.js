@@ -793,8 +793,8 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     }
     contactInfo += "</p><br>\n";
     // Create course info output content and set appropriate LibInsight fields.
-    courseInfo += "\n<h3>"+frmData.sect_course_information_if_applicable_.title+"</h3>\n\n<p>";
-    if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value) {
+    if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value || frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
+        courseInfo += "\n<h3>"+frmData.sect_course_information_if_applicable_.title+"</h3>\n\n<p>";
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term) {
             courseInfo += "<strong>Term</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term + "<br>\n";
             data['field_883'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term;
@@ -815,28 +815,28 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
             courseInfo += "<strong>Enrollment</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment + "<br>\n";
             data['field_887'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment;
         }
-    }
-    if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
-        let firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
-        if (firebaseFilename !== "") {
-            let origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
-            courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
-            data['field_941'] = firebaseFilename;
-            fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
-            // @TODO create file attachment for the email by retrieving the content from Firebase storage
-            libOptions.attachments = Array({
-                filename: origFilename,
-                content: fileContent,
-                encoding: 'base64'
-            });
-            userOptions.attachments = Array({
-                filename: origFilename,
-                content: fileContent,
-                encoding: 'base64'
-            });
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
+            const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
+            if (firebaseFilename !== "") {
+                let origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+                courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
+                data['field_941'] = firebaseFilename;
+                fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
+                // @TODO create file attachment for the email by retrieving the content from Firebase storage
+                libOptions.attachments = Array({
+                    filename: origFilename,
+                    content: fileContent,
+                    encoding: 'base64'
+                });
+                userOptions.attachments = Array({
+                    filename: origFilename,
+                    content: fileContent,
+                    encoding: 'base64'
+                });
+            }
         }
+        courseInfo += "</p><br>\n";
     }
-    courseInfo += "</p><br>\n";
     // Create session info output content and set appropriate LibInsight fields.
     sessionInfo += "\n<h3>"+frmData.sect_session_information.title+"</h3>\n\n<p>";
     if (frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value) {
