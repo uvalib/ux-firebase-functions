@@ -92,7 +92,7 @@ function convTime24to12(time) {
 
 function deleteFirebaseFile(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
-    file.delete((error,response) => {
+    return file.delete((error,response) => {
         if (error) {
             console.log(`Error deleting storage of ${filename}: `+error.toString());
         } else {
@@ -103,10 +103,9 @@ function deleteFirebaseFile(filename) {
 
 function getFileContentFromStorage(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
-    file.download()
+    return file.download()
         .then((data) => {
-            console.log(data[0]);
-            return data[0];
+            return data;
         })
         .catch((error) => {
             console.log(`Error downloading ${filename}: `+error.toString());
@@ -822,17 +821,21 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                 const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
-                fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
-                libOptions.attachments = [{
-                    filename: origFilename,
-                    content: fileContent,
-                    encoding: 'base64'
-                }];
-                userOptions.attachments = [{
-                    filename: origFilename,
-                    content: fileContent,
-                    encoding: 'base64'
-                }];
+                let attachment = getFileContentFromStorage(firebaseFilename)
+                    .then((data)=>{
+                        let fileContent = base64.encode(data[0]);
+                        return [{
+                            filename: '',
+                            content: fileContent,
+                            encoding: 'base64'
+                        }];
+                    })
+                    .catch((error) => {
+                        console.log(`Error attaching ${firebaseFilename}: `+error.toString());
+                    });
+                attachment.filename = origFilename;
+                libOptions.attachment = attachment;
+                userOptions.attachment = attachment;
             }
         }
         courseInfo += "</p><br>\n";
@@ -956,10 +959,10 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                 errors = true;
                 console.log(`Request ${reqId} library notification failed: ${responses[0].err.toString()}`);
             } else {
-                if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
+/*                if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
                     const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
                     deleteFirebaseFile(firebaseFileName);
-                }
+                }*/
                 results.library_notification = 'succeeded';
             }
             if (responses[1].err) {
