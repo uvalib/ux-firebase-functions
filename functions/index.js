@@ -103,10 +103,9 @@ function deleteFirebaseFile(filename) {
 
 function getFileContentFromStorage(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
-    console.log(file);
     file.download()
         .then((data) => {
-            console.log(data);
+            console.log(data[0]);
             return data[0];
         })
         .catch((error) => {
@@ -824,16 +823,16 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
                 fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
-                libOptions.attachments = Array({
+                libOptions.attachments = [{
                     filename: origFilename,
                     content: fileContent,
                     encoding: 'base64'
-                });
-                userOptions.attachments = Array({
+                }];
+                userOptions.attachments = [{
                     filename: origFilename,
                     content: fileContent,
                     encoding: 'base64'
-                });
+                }];
             }
         }
         courseInfo += "</p><br>\n";
@@ -957,6 +956,10 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                 errors = true;
                 console.log(`Request ${reqId} library notification failed: ${responses[0].err.toString()}`);
             } else {
+                if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
+                    const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
+                    deleteFirebaseFile(firebaseFileName);
+                }
                 results.library_notification = 'succeeded';
             }
             if (responses[1].err) {
@@ -965,13 +968,21 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
             } else {
                 results.patron_notification = 'succeeded';
             }
-            if (responses[2].body) {
+/*            if (responses[2].body) {
                 if (responses[2].body.response) {
                     results.LibInsight = 'succeeded';
                 } else {
                     errors = true;
                     console.log(`Request ${reqId} LibInsight POST failed: ${JSON.stringify(responses[2].response)}`);
                 }
+            }*/
+            if (!responses[2].response) {
+                errors = true;
+                console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
+                console.log(`Request ${reqId} LibInsight POST failed.`);
+            } else {
+                console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
+                results.LibInsight = 'succeeded';
             }
             if (errors) {
                 return errors;
