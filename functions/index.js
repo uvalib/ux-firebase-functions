@@ -86,7 +86,7 @@ function convDateYMDtoMDY(date) {
 }
 
 function convTime24to12(time) {
-    let date = moment.format("YYYY-MM-DD ");
+    let date = moment().format("YYYY-MM-DD ");
     return moment(date+time,"YYYY-MM-DD HH:mm").format("hh:mm A");
 }
 
@@ -755,7 +755,7 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     let contactInfo = courseInfo = sessionInfo = scheduleInfo = commentInfo = '';
     let adminMsg = "<p><strong>* This email may contain an attachment. It is recommended that you scan the attachment to make sure it does not contain a virus.</strong></p>\n\n";
     let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
-    patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu/434-243-8194) or Heather Riser (mhm8m@virginia.edu/434-924- 4966) if you have questions regarding this request.</p><br>\n\n";
+    patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu/434-243-8194) or Heather Riser (mhm8m@virginia.edu/434-924-4966) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
     let promises = [];
     let results = {};
@@ -790,7 +790,11 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     }
     contactInfo += "</p><br>\n";
     // Create course info output content and set appropriate LibInsight fields.
-    if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value || frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
+    if ((frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.course)
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.section) 
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.title) 
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment) 
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0))) {
         courseInfo += "\n<h3>"+frmData.sect_course_information_if_applicable_.title+"</h3>\n\n<p>";
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term) {
             courseInfo += "<strong>Term</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term + "<br>\n";
@@ -812,14 +816,14 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
             courseInfo += "<strong>Enrollment</strong><br>\n" + frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment + "<br>\n";
             data['field_887'] = frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment;
         }
-        if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value) {
+        if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
+                console.log('file attachment');
                 const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
                 fileContent = base64.encode(getFileContentFromStorage(firebaseFilename));
-                // @TODO create file attachment for the email by retrieving the content from Firebase storage
                 libOptions.attachments = Array({
                     filename: origFilename,
                     content: fileContent,
@@ -903,15 +907,15 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
             if (data.show) {
                 let sessionText = sessionLengthAndChoicesToString(data);
                 scheduleInfo += sessionText + "<hr>";
-                if (session.nth === 1) {
+                if (data.nth === 1) {
                     data['field_898'] = stripHtml(sessionText);
-                } else if (session.nth === 2) {
+                } else if (data.nth === 2) {
                     data['field_899'] = stripHtml(sessionText);
-                } else if (session.nth === 3) {
+                } else if (data.nth === 3) {
                     data['field_900'] = stripHtml(sessionText);
-                } else if (session.nth === 4) {
+                } else if (data.nth === 4) {
                     data['field_901'] = stripHtml(sessionText);
-                } else if (session.nth === 5) {
+                } else if (data.nth === 5) {
                     data['field_902'] = stripHtml(sessionText);
                 } else {
                     data['field_903'] = stripHtml(sessionText);
