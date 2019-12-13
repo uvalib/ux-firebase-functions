@@ -90,6 +90,23 @@ function convTime24to12(time) {
     return moment(date+time,"YYYY-MM-DD HH:mm").format("hh:mm A");
 }
 
+async function createEmailFileAttachment(fileName) {
+    let file = bucket.file('form_file_uploads/'+fileName);
+    console.log('createEmail...');
+    console.log(file);
+    try {
+        const data = await file.download();
+        //            let fileContent = base64.encode(data[0]);
+        return [{
+            filename: fileName,
+            content: data[0]
+        }];
+    }
+    catch (error) {
+        console.log(`Error creating attachment for ${filename}: ` + error.toString());
+    }
+}
+
 function deleteFirebaseFile(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
     return file.delete((error,response) => {
@@ -101,15 +118,15 @@ function deleteFirebaseFile(filename) {
     });
 }
 
-function getFileContentFromStorage(filename) {
+async function getFileContentFromStorage(filename) {
     let file = bucket.file('form_file_uploads/'+filename);
-    return file.download()
-        .then((data) => {
-            return data;
-        })
-        .catch((error) => {
-            console.log(`Error downloading ${filename}: `+error.toString());
-        });
+    try {
+        const data = await file.download();
+        return data;
+    }
+    catch (error) {
+        console.log(`Error downloading ${filename}: ` + error.toString());
+    }
 }
 
 function getFormId(formDefn) {
@@ -153,7 +170,7 @@ function getSectionFields(section) {
     return fields;
 }
 
-function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
+async function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let adminMsg = subjPre = courseInfo = biblioInfo = requestorInfo = '';
     let patronMsg = "<p>A copy of your purchase recommendation is shown below.</p><br>\n\n";
     let data = { 'field_642': reqId, 'ts_start': submitted };
@@ -712,44 +729,48 @@ function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptio
     // Post to LibInsight
     promises[2] = request.post({ url: purchaseRecommendationDatasetApi, form: data });
 
-    return Promise.all(promises)
-        .then(responses => {
-            let errors = false;
-            if (responses[0].err) {
-                errors = true;
-                console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
-            } else {
-                results.library_notification = 'succeeded';
-            }
-            if (responses[1].err) {
-                errors = true;
-                console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
-            } else {
-                results.patron_notification = 'succeeded';
-            }
-            if (!responses[2].response) {
-                errors = true;
-                console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
-                console.log(`Request ${reqId} LibInsight POST failed.`);
-            } else {
-                console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
-                results.LibInsight = 'succeeded';
-            }
-            if (errors) {
-                return errors;
-            } else {
-                console.log(`results: ${JSON.stringify(results)}`);
-                return results;
-            }
-        })
-        .catch(error => {
-            // empty results would be adequate to indicate an error
-            console.log(`error: ${JSON.stringify(error)}`);
-            return error;
-        });
+    try {
+        const responses = await Promise.all(promises);
+        let errors = false;
+        if (responses[0].err) {
+            errors = true;
+            console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
+        }
+        else {
+            results.library_notification = 'succeeded';
+        }
+        if (responses[1].err) {
+            errors = true;
+            console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
+        }
+        else {
+            results.patron_notification = 'succeeded';
+        }
+        if (!responses[2].response) {
+            errors = true;
+            console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
+            console.log(`Request ${reqId} LibInsight POST failed.`);
+        }
+        else {
+            console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
+            results.LibInsight = 'succeeded';
+        }
+        if (errors) {
+            return errors;
+        }
+        else {
+            console.log(`results: ${JSON.stringify(results)}`);
+            return results;
+        }
+    }
+    catch (error) {
+        // empty results would be adequate to indicate an error
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
 }
 
-function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
+async function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let contactInfo = courseInfo = sessionInfo = scheduleInfo = commentInfo = '';
     let adminMsg = "<p><strong>* This email may contain an attachment. It is recommended that you scan the attachment to make sure it does not contain a virus.</strong></p>\n\n";
     let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
@@ -817,11 +838,11 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
-                console.log('file attachment');
                 const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
-                let attachment = getFileContentFromStorage(firebaseFilename)
+                let attachment = createEmailFileAttachment(firebaseFilename);
+/*                getFileContentFromStorage(firebaseFilename)
                     .then((data)=>{
                         let fileContent = base64.encode(data[0]);
                         return [{
@@ -832,8 +853,10 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
                     })
                     .catch((error) => {
                         console.log(`Error attaching ${firebaseFilename}: `+error.toString());
-                    });
+                    });*/
                 attachment.filename = origFilename;
+                console.log('attachment');
+                console.log(attachment);
                 libOptions.attachment = attachment;
                 userOptions.attachment = attachment;
             }
@@ -907,12 +930,13 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
         for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
             let data = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
             if (data.show) {
-                let sessionText = sessionLengthAndChoicesToString(data);
+                const sessionText = sessionLengthAndChoicesToString(data);
+                const plainText = stripHtml(sessionText);
                 scheduleInfo += sessionText + "<hr>";
                 if (data.nth === 1) {
-                    data['field_898'] = stripHtml(sessionText);
+                    data['field_898'] = plainText;
                 } else if (data.nth === 2) {
-                    data['field_899'] = stripHtml(sessionText);
+                    data['field_899'] = plainText;
                 } else if (data.nth === 3) {
                     data['field_900'] = stripHtml(sessionText);
                 } else if (data.nth === 4) {
@@ -952,61 +976,65 @@ function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions
     // Post to LibInsight
     promises[2] = request.post({ url: specCollInstructionDatasetApi, form: data });
     
-    return Promise.all(promises)
-        .then(responses => {
-            let errors = false;
-            if (responses[0].err) {
-                errors = true;
-                console.log(`Request ${reqId} library notification failed: ${responses[0].err.toString()}`);
-            } else {
-/*                if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
-                    const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
-                    deleteFirebaseFile(firebaseFileName);
-                }*/
-                results.library_notification = 'succeeded';
-            }
-            if (responses[1].err) {
-                errors = true;
-                console.log(`Request ${reqId} patron notification failed: ${responses[1].err.toString()}`);
-            } else {
-                results.patron_notification = 'succeeded';
-            }
-/*            if (responses[2].body) {
-                if (responses[2].body.response) {
-                    results.LibInsight = 'succeeded';
-                } else {
-                    errors = true;
-                    console.log(`Request ${reqId} LibInsight POST failed: ${JSON.stringify(responses[2].response)}`);
-                }
-            }*/
-            if (!responses[2].response) {
-                errors = true;
-                console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
-                console.log(`Request ${reqId} LibInsight POST failed.`);
-            } else {
-                console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
-                results.LibInsight = 'succeeded';
-            }
-            if (errors) {
-                return errors;
-            } else {
-                console.log(`results: ${JSON.stringify(results)}`);
-                return results;
-            }
-        })
-        .catch(error => {
-            // empty results would be adequate to indicate an error
-            console.log(`error: ${JSON.stringify(error)}`);
-            return error;
-        });
+    try {
+        const responses = await Promise.all(promises);
+        let errors = false;
+        if (responses[0].err) {
+            errors = true;
+            console.log(`Request ${reqId} library notification failed: ${responses[0].err.toString()}`);
+        }
+        else {
+            /*                if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
+                                const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
+                                deleteFirebaseFile(firebaseFileName);
+                            }*/
+            results.library_notification = 'succeeded';
+        }
+        if (responses[1].err) {
+            errors = true;
+            console.log(`Request ${reqId} patron notification failed: ${responses[1].err.toString()}`);
+        }
+        else {
+            results.patron_notification = 'succeeded';
+        }
+        /*            if (responses[2].body) {
+                        if (responses[2].body.response) {
+                            results.LibInsight = 'succeeded';
+                        } else {
+                            errors = true;
+                            console.log(`Request ${reqId} LibInsight POST failed: ${JSON.stringify(responses[2].response)}`);
+                        }
+                    }*/
+        if (!responses[2].response) {
+            errors = true;
+            console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
+            console.log(`Request ${reqId} LibInsight POST failed.`);
+        }
+        else {
+            console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
+            results.LibInsight = 'succeeded';
+        }
+        if (errors) {
+            return errors;
+        }
+        else {
+            console.log(`results: ${JSON.stringify(results)}`);
+            return results;
+        }
+    }
+    catch (error) {
+        // empty results would be adequate to indicate an error
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
 }
 
-function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
+async function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let inputs = msg = '';
     let data = { 'field_619': reqId, 'ts_start': submitted };
     let promises = [];
     let results = {};
-
+    
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_name.value) {
         inputs += "<strong>" + frmData.fld_name.label + ":</strong> " + frmData.fld_name.value + "<br>\n";
@@ -1047,41 +1075,45 @@ function processGovernmentInformationRequest(reqId, submitted, frmData, libOptio
     // Post to LibInsight
     promises[2] = request.post({ url: governmentInformationDatasetApi, form: data });
 
-    return Promise.all(promises)
-        .then(responses => {
-            let errors = false;
-            if (responses[0].err) {
-                errors = true;
-                console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
-            } else {
-                results.library_notification = 'succeeded';
-            }
-            if (responses[1].err) {
-                errors = true;
-                console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
-            } else {
-                results.patron_notification = 'succeeded';
-            }
-            if (!responses[2].response) {
-                errors = true;
-                console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
-                console.log(`Request ${reqId} LibInsight POST failed.`);
-            } else {
-                console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
-                results.LibInsight = 'succeeded';
-            }
-            if (errors) {
-                return errors;
-            } else {
-                console.log(`results: ${JSON.stringify(results)}`);
-                return results;
-            }
-        })
-        .catch(error => {
-            // empty results would be adequate to indicate an error
-            console.log(`error: ${JSON.stringify(error)}`);
-            return error;
-        });
+    try {
+        const responses = await Promise.all(promises);
+        let errors = false;
+        if (responses[0].err) {
+            errors = true;
+            console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
+        }
+        else {
+            results.library_notification = 'succeeded';
+        }
+        if (responses[1].err) {
+            errors = true;
+            console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
+        }
+        else {
+            results.patron_notification = 'succeeded';
+        }
+        if (!responses[2].response) {
+            errors = true;
+            console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
+            console.log(`Request ${reqId} LibInsight POST failed.`);
+        }
+        else {
+            console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
+            results.LibInsight = 'succeeded';
+        }
+        if (errors) {
+            return errors;
+        }
+        else {
+            console.log(`results: ${JSON.stringify(results)}`);
+            return results;
+        }
+    }
+    catch (error) {
+        // empty results would be adequate to indicate an error
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
 }
 
 function sessionLengthAndChoicesToString(data) {
