@@ -841,7 +841,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
                 const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
-                let attachment = createEmailFileAttachment(firebaseFilename);
+                let attachment = await createEmailFileAttachment(firebaseFilename);
 /*                getFileContentFromStorage(firebaseFilename)
                     .then((data)=>{
                         let fileContent = base64.encode(data[0]);
