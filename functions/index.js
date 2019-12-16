@@ -99,11 +99,11 @@ async function createEmailFileAttachment(sourceFile,destFile) {
     try {
         const [metadata] = await file.getMetadata();
         const data = await file.download();
-        const bytes = utf8.encode(data[0]);
-        const encoded = base64.encode(bytes);
+        console.log(typeof data);
+        console.log(data);
         let attachment = {
             filename: destFile,
-            content: encoded,
+            content: data.toString('base64'),
             encoding: 'base64'
         };
         if (metadata.contentType) attachment.contentType = metadata.contentType;
