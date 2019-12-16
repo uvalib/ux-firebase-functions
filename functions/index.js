@@ -6,6 +6,7 @@ const request = require('request');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
 const base64 = require('base-64');
+const utf8 = require('utf8');
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -35,6 +36,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
+        attachments: [],
         secret: emailSecret
     };
     let patronOptions = {
@@ -45,6 +47,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
+        attachments: [],
         secret: emailSecret
     };
 
@@ -90,43 +93,37 @@ function convTime24to12(time) {
     return moment(date+time,"YYYY-MM-DD HH:mm").format("hh:mm A");
 }
 
-async function createEmailFileAttachment(fileName) {
-    let file = bucket.file('form_file_uploads/'+fileName);
+async function createEmailFileAttachment(sourceFile,destFile) {
+    let file = bucket.file('form_file_uploads/'+sourceFile);
     console.log('createEmail...');
-    console.log(file);
     try {
+        const [metadata] = await file.getMetadata();
         const data = await file.download();
-        //            let fileContent = base64.encode(data[0]);
-        return [{
-            filename: fileName,
-            content: data[0]
-        }];
+        const bytes = utf8.encode(data[0]);
+        const encoded = base64.encode(bytes);
+        let attachment = {
+            filename: destFile,
+            content: encoded,
+            encoding: 'base64'
+        };
+        if (metadata.contentType) attachment.contentType = metadata.contentType;
+        return attachment;
     }
     catch (error) {
-        console.log(`Error creating attachment for ${filename}: ` + error.toString());
+        console.log(`Error creating attachment for ${sourceFile}: ` + error.toString());
+        return error;
     }
 }
 
-function deleteFirebaseFile(filename) {
-    let file = bucket.file('form_file_uploads/'+filename);
+function deleteFirebaseFile(sourceFile) {
+    let file = bucket.file('form_file_uploads/'+sourceFile);
     return file.delete((error,response) => {
         if (error) {
-            console.log(`Error deleting storage of ${filename}: `+error.toString());
+            console.log(`Error deleting storage of ${sourceFile}: `+error.toString());
         } else {
-            console.log(`File ${filename} deleted: `+response.toString());
+            console.log(`File ${sourceFile} deleted: `+response.toString());
         }
     });
-}
-
-async function getFileContentFromStorage(filename) {
-    let file = bucket.file('form_file_uploads/'+filename);
-    try {
-        const data = await file.download();
-        return data;
-    }
-    catch (error) {
-        console.log(`Error downloading ${filename}: ` + error.toString());
-    }
 }
 
 function getFormId(formDefn) {
@@ -841,24 +838,9 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
                 const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
-                let attachment = await createEmailFileAttachment(firebaseFilename);
-/*                getFileContentFromStorage(firebaseFilename)
-                    .then((data)=>{
-                        let fileContent = base64.encode(data[0]);
-                        return [{
-                            filename: '',
-                            content: fileContent,
-                            encoding: 'base64'
-                        }];
-                    })
-                    .catch((error) => {
-                        console.log(`Error attaching ${firebaseFilename}: `+error.toString());
-                    });*/
-                attachment.filename = origFilename;
-                console.log('attachment');
-                console.log(attachment);
-                libOptions.attachment = attachment;
-                userOptions.attachment = attachment;
+                let attachment = Array(await createEmailFileAttachment(firebaseFilename, origFilename));
+                libOptions.attachments = attachment;
+                userOptions.attachments = attachment;
             }
         }
         courseInfo += "</p><br>\n";
@@ -931,12 +913,15 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
             let data = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
             if (data.show) {
                 const sessionText = sessionLengthAndChoicesToString(data);
-                const plainText = stripHtml(sessionText);
+                console.log(sessionText);
+                data['field_898'] = sessionText;
                 scheduleInfo += sessionText + "<hr>";
                 if (data.nth === 1) {
-                    data['field_898'] = plainText;
+                    console.log('Session '+data.nth);
+                    console.log(sessionText);
+                    //data['field_898'] = sessionText;
                 } else if (data.nth === 2) {
-                    data['field_899'] = plainText;
+                    data['field_899'] = sessionText;
                 } else if (data.nth === 3) {
                     data['field_900'] = stripHtml(sessionText);
                 } else if (data.nth === 4) {
@@ -964,6 +949,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
+    console.log(libOptions);
     promises[0] = request.post({ url: emailUrl, form: libOptions });
 
     // Prepare email confirmation content for patron
@@ -971,6 +957,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     userOptions.to = frmData.sect_your_contact_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     userOptions.text = stripHtml(patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
+    console.log(userOptions);
     promises[1] = request.post({ url: emailUrl, form: userOptions });
 
     // Post to LibInsight
