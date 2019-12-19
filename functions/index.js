@@ -5,8 +5,6 @@ const bucket = storage.bucket('uvalib-api.appspot.com');
 const request = require('request');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
-const base64 = require('base-64');
-const utf8 = require('utf8');
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
