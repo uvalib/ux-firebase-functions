@@ -860,7 +860,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_number_of_participants.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_number_of_participants.value + "<br>\n";
         data['field_890'] = frmData.sect_session_information.fields.fld_number_of_participants.value;
     }
-    if (frmData.sect_session_information.fields.fld_level_of_participants.value) {
+    if (frmData.sect_session_information.fields.fld_level_of_participants.value && frmData.sect_session_information.fields.fld_level_of_participants.value.length > 0) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_level_of_participants.label + "</strong><br>\n";
         sessionInfo += "<ul>";
         for (let key in frmData.sect_session_information.fields.fld_level_of_participants.value) {
