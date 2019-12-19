@@ -767,7 +767,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     let contactInfo = courseInfo = sessionInfo = scheduleInfo = commentInfo = '';
     let adminMsg = "<p><strong>* This email may contain an attachment. It is recommended that you scan the attachment to make sure it does not contain a virus.</strong></p>\n\n";
     let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
-    patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu/434-243-8194) or Heather Riser (mhm8m@virginia.edu/434-924-4966) if you have questions regarding this request.</p><br>\n\n";
+    patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu / 434-243-8194) or Heather Riser (mhm8m@virginia.edu / 434-924-4966) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
     let promises = [];
     let results = {};
