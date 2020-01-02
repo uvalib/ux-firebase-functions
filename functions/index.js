@@ -32,6 +32,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
 
     // Initialize email routing/content.
     let libraryOptions = {
+        secret: emailSecret,
         from: '"UVA Library" <no-reply-library@Virginia.EDU>',
         replyTo: '',
         to: '',
@@ -39,10 +40,10 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
-        attachments: [],
-        secret: emailSecret
+        attachments: []
     };
     let patronOptions = {
+        secret: emailSecret,
         from: '"UVA Library" <no-reply-library@Virginia.EDU>',
         replyTo: '"UVA Library" <NO-REPLY-LIBRARY@Virginia.EDU>',
         to: '',
@@ -50,8 +51,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
-        attachments: [],
-        secret: emailSecret
+        attachments: []
     };
 
     // Identify the request type and process...
