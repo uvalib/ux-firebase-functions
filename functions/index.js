@@ -779,12 +779,12 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
 
 async function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let contactInfo = courseInfo = sessionInfo = scheduleInfo = commentInfo = '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let adminMsg = "<p><strong>* This email may contain an attachment. It is recommended that you scan the attachment to make sure it does not contain a virus.</strong></p>\n\n";
     let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
     patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu / 434-243-8194) or Heather Riser (mhm8m@virginia.edu / 434-924-4966) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
-    let promises = [];
-    let results = {};
+    let sourceFiles = [];
     console.log(`frmData: ${JSON.stringify(frmData)}`);
 
     // Create contact info output content and set appropriate LibInsight fields.
@@ -848,6 +848,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
                 const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
                 data['field_941'] = firebaseFilename;
+                sourceFiles[0] = firebaseFilename;
                 let attachment = Array(await createEmailFileAttachment(firebaseFilename, origFilename));
                 libOptions.attachments = attachment;
                 userOptions.attachments = attachment;
@@ -956,11 +957,10 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     libOptions.to = 'lib-ux-testing@virginia.edu';
     libOptions.bcc = 'jlk4p@virginia.edu';
     libOptions.subject = 'Small Special Collections Instruction Request: '+frmData.sect_your_contact_information.fields.fld_name.value;
-    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
     console.log(libOptions);
-    promises[0] = request.post({ url: emailUrl, form: libOptions }, emailCallback);
+//    promises[0] = request.post({ url: emailUrl, form: libOptions }, emailCallback);
 
     // Prepare email confirmation content for patron
     userOptions.subject = 'Small Special Collections Instruction Request';
@@ -968,28 +968,15 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     userOptions.html = patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     userOptions.text = stripHtml(patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
     console.log(userOptions);
-    promises[1] = request.post({ url: emailUrl, form: userOptions }, emailCallback);
+//    promises[1] = request.post({ url: emailUrl, form: userOptions }, emailCallback);
 
     // Post to LibInsight
-    promises[2] = request.post({ url: specCollInstructionDatasetApi, form: data }, libInsightCallback);
-    
+//    promises[2] = request.post({ url: specCollInstructionDatasetApi, form: data }, libInsightCallback);
     
     try {
-        const responses = await Promise.all(promises);
-        if (emailSent && dataSaved) {
-/*            if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
-                const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
-                deleteFirebaseFile(firebaseFileName);
-            }*/
-            console.log(`Request ${reqId} successfully emailed and saved.`);
-        } else {
-            if (!emailSent) console.log(`Request ${reqId} had trouble sending email.`);
-            if (!dataSaved) console.log(`Request ${reqId} had trouble saving the data.`);
-        }
-        return responses;
+        return postEmailAndData(reqId, libOptions, userOptions, specCollInstructionDatasetApi, data, sourceFiles);
     }
     catch (error) {
-        // empty results would be adequate to indicate an error
         console.log(`error: ${JSON.stringify(error)}`);
         return error;
     }
@@ -997,6 +984,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
 
 async function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let inputs = msg = '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_619': reqId, 'ts_start': submitted };
     let sourceFiles = [];
     
@@ -1016,11 +1004,9 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
     msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
 
     // Prepare email content for Library staff
-    // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
-    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
-
-    //libOptions.from = frmData.fld_email_address.value;
+    libOptions.from = frmData.fld_email_address.value;
     libOptions.replyTo = frmData.fld_email_address.value;
+    // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
     libOptions.to = 'jlk4p@virginia.edu';
     libOptions.subject = 'Reference Referral';
     libOptions.html = msg + inputs + reqText;
