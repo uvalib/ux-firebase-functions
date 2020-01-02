@@ -101,11 +101,16 @@ async function createEmailFileAttachment(sourceFile,destFile) {
     console.log('createEmail...');
     try {
         const [metadata] = await file.getMetadata();
-        const data = await file.download();
+/*        const data = await file.download();
         let attachment = {
             filename: destFile,
             encoding: 'base64',
             content: data.toString('base64')
+        };*/
+        const url = await file.getSignedUrl({action: 'read', expires: '03-17-2025'});
+        let attachment = {
+            filename: destFile,
+            path: url
         };
         if (metadata.contentType) attachment.contentType = metadata.contentType;
         return attachment;
@@ -1057,7 +1062,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
                 console.log(`LibInsight data saved for ${reqId}: `+body);
             }
             // Emails successfully sent??? So can we delete uploaded attachments for this request?
-            if (files.length > 0) {
+/*            if (files.length > 0) {
                 try {
                     for (var i=0; i < files.length; i++) {
                         deleteFirebaseFile(files[i]);
@@ -1066,7 +1071,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
                 catch (error) {
                     return error;
                 }
-            }
+            }*/
             return result.response;
         } else {
             console.log(`Bad response from ${apiUrl}: `+body);
