@@ -57,14 +57,12 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
 
     // Identify the request type and process...
     const formFields = getFormFields(reqDetails);
+    console.log(`${formId}: ${requestId}`);
     if ((formId === 'purchase_requests') || (formId === 'purchase_request_limited_functio')) {
-        console.log(`${formId}: ${requestId}`);
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'class_visits_and_instruction') {
-        console.log(`${formId}: ${requestId}`);
         return processSpecCollInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
-        console.log(`${formId}: ${requestId}`);
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
