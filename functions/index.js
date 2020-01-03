@@ -3,7 +3,6 @@ const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
 const bucket = storage.bucket('uvalib-api.appspot.com'); 
 const request = require('request');
-const requestP = require('request-promise');
 const requestPN = require('request-promise-native');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
