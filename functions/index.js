@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
 const bucket = storage.bucket('uvalib-api.appspot.com'); 
-const request = require('request');
+const request = require('request'); // used by requestPN
 const requestPN = require('request-promise-native');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
@@ -185,8 +185,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     let adminMsg = subjPre = courseInfo = biblioInfo = requestorInfo = '';
     let patronMsg = "<p>A copy of your purchase recommendation is shown below.</p><br>\n\n";
     let data = { 'field_642': reqId, 'ts_start': submitted };
-    let promises = [];
-    let results = {};
+    let sourceFiles = [];
 
     // Prepare email message body and LibInsight data parameters
     // The admin message has a few fields out of order placed at the top.
@@ -727,7 +726,6 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo + reqText);
-    promises[0] = request.post({ url: emailUrl, form: libOptions });
 
     // Prepare email confirmation content for patron
     userOptions.subject = (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
@@ -735,47 +733,11 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
-    promises[1] = request.post({ url: emailUrl, form: userOptions });
-
-    // Post to LibInsight
-    promises[2] = request.post({ url: purchaseRecommendationDatasetApi, form: data });
 
     try {
-        const responses = await Promise.all(promises);
-        let errors = false;
-        if (responses[0].err) {
-            errors = true;
-            console.log(`Request ${reqId} library notification failed: ${responses['library_notification'].err.toString()}`);
-        }
-        else {
-            results.library_notification = 'succeeded';
-        }
-        if (responses[1].err) {
-            errors = true;
-            console.log(`Request ${reqId} patron notification failed: ${responses['patron_notification'].err.toString()}`);
-        }
-        else {
-            results.patron_notification = 'succeeded';
-        }
-        if (!responses[2].response) {
-            errors = true;
-            console.log(`LibInsight failure: ${JSON.stringify(responses[2])}`);
-            console.log(`Request ${reqId} LibInsight POST failed.`);
-        }
-        else {
-            console.log(`LibInsight success: ${JSON.stringify(responses[2])}`);
-            results.LibInsight = 'succeeded';
-        }
-        if (errors) {
-            return errors;
-        }
-        else {
-            console.log(`results: ${JSON.stringify(results)}`);
-            return results;
-        }
+        return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data, sourceFiles);
     }
     catch (error) {
-        // empty results would be adequate to indicate an error
         console.log(`error: ${JSON.stringify(error)}`);
         return error;
     }
@@ -789,7 +751,6 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu / 434-243-8194) or Heather Riser (mhm8m@virginia.edu / 434-924-4966) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
     let sourceFiles = [];
-    console.log(`frmData: ${JSON.stringify(frmData)}`);
 
     // Create contact info output content and set appropriate LibInsight fields.
     contactInfo += "\n<h3>"+frmData.sect_your_contact_information.title+"</h3>\n\n<p>";
