@@ -4,6 +4,7 @@ const storage = new Storage();
 const bucket = storage.bucket('uvalib-api.appspot.com'); 
 const request = require('request');
 const requestP = require('request-promise');
+const requestPN = require('request-promise-native');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
 
@@ -107,7 +108,8 @@ async function createEmailFileAttachment(sourceFile,destFile) {
             encoding: 'base64',
             content: data.toString('base64')
         };*/
-        const url = await file.getSignedUrl({action: 'read', expires: '03-17-2025'});
+        // Provide a URL good for 30 days.
+        const url = await file.getSignedUrl({action: 'read', expires: Date.now() + (1000 * 60 * 60 * 24 * 30)});
         let attachment = {
             filename: destFile,
             path: url
@@ -926,23 +928,19 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         scheduleInfo += "<p><strong>Sessions requested</strong><br>\n" + numSessions + "<br>\n</p>";
         data['field_897'] = numSessions;
         for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
-            let data = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
-            if (data.show) {
-                const sessionText = sessionLengthAndChoicesToString(data);
-                console.log(sessionText);
-                data['field_898'] = sessionText;
+            const session = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
+            if (session.show) {
+                const sessionText = sessionLengthAndChoicesToString(session);
                 scheduleInfo += sessionText + "<hr>";
-                if (data.nth === 1) {
-                    console.log('Session '+data.nth);
-                    console.log(sessionText);
-                    //data['field_898'] = sessionText;
-                } else if (data.nth === 2) {
-                    data['field_899'] = sessionText;
-                } else if (data.nth === 3) {
+                if (session.nth === 1) {
+                    data['field_898'] = stripHtml(sessionText);
+                } else if (session.nth === 2) {
+                    data['field_899'] = stripHtml(sessionText);
+                } else if (session.nth === 3) {
                     data['field_900'] = stripHtml(sessionText);
-                } else if (data.nth === 4) {
+                } else if (session.nth === 4) {
                     data['field_901'] = stripHtml(sessionText);
-                } else if (data.nth === 5) {
+                } else if (session.nth === 5) {
                     data['field_902'] = stripHtml(sessionText);
                 } else {
                     data['field_903'] = stripHtml(sessionText);
@@ -965,18 +963,12 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
     console.log(libOptions);
-//    promises[0] = request.post({ url: emailUrl, form: libOptions }, emailCallback);
 
     // Prepare email confirmation content for patron
     userOptions.subject = 'Small Special Collections Instruction Request';
     userOptions.to = frmData.sect_your_contact_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     userOptions.text = stripHtml(patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
-    console.log(userOptions);
-//    promises[1] = request.post({ url: emailUrl, form: userOptions }, emailCallback);
-
-    // Post to LibInsight
-//    promises[2] = request.post({ url: specCollInstructionDatasetApi, form: data }, libInsightCallback);
     
     try {
         return postEmailAndData(reqId, libOptions, userOptions, specCollInstructionDatasetApi, data, sourceFiles);
@@ -1036,11 +1028,11 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
 }
 
 function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData, files) {
-    requestP({method: 'POST', uri: emailUrl, form: requestEmailOptions})
+    requestPN({method: 'POST', uri: emailUrl, form: requestEmailOptions})
     .then(body => {
         if (body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Library request notification sent for ${reqId}: `+body);
-            return requestP({method: 'POST', uri: emailUrl, form: confirmEmailOptions});
+            return requestPN({method: 'POST', uri: emailUrl, form: confirmEmailOptions});
         } else {
             console.log(`Library request notification failed for ${reqId}: `+body);
             throw new Error(`Library request notification failed for ${reqId}: `+body);
@@ -1049,7 +1041,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
     .then(body => {
         if(body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Patron confirmation notification sent for ${reqId}: `+body);
-            return requestP({method: 'POST', uri: apiUrl, form: formData});
+            return requestPN({method: 'POST', uri: apiUrl, form: formData});
         } else {
             console.log(`Patron confirmation notification failed for ${reqId}: `+body);
             throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
