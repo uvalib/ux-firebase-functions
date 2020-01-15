@@ -40,7 +40,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
-        attachments: []
+        sourceFile: '',
+        destFile: ''
     };
     let patronOptions = {
         secret: emailSecret,
@@ -51,7 +52,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
-        attachments: []
+        sourceFile: '',
+        destFile: ''
     };
 
     // Identify the request type and process...
@@ -185,7 +187,6 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     let adminMsg = subjPre = courseInfo = biblioInfo = requestorInfo = '';
     let patronMsg = "<p>A copy of your purchase recommendation is shown below.</p><br>\n\n";
     let data = { 'field_642': reqId, 'ts_start': submitted };
-    let sourceFiles = [];
 
     // Prepare email message body and LibInsight data parameters
     // The admin message has a few fields out of order placed at the top.
@@ -735,7 +736,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
 
     try {
-        return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data, sourceFiles);
+        return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
@@ -750,7 +751,6 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
     patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu / 434-243-8194) or Heather Riser (mhm8m@virginia.edu / 434-924-4966) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
-    let sourceFiles = [];
 
     // Create contact info output content and set appropriate LibInsight fields.
     contactInfo += "\n<h3>"+frmData.sect_your_contact_information.title+"</h3>\n\n<p>";
@@ -810,13 +810,10 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
-                const origFilename = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
-                courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + origFilename + "<br>\n";
+                libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
+                libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+                courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
                 data['field_941'] = firebaseFilename;
-                sourceFiles[0] = firebaseFilename;
-                let attachment = Array(await createEmailFileAttachment(firebaseFilename, origFilename));
-                libOptions.attachments = attachment;
-                userOptions.attachments = attachment;
             }
         }
         courseInfo += "</p><br>\n";
@@ -914,8 +911,9 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         data['field_904'] = frmData.fld_comments.value;
     }
 
-    // @TODO comment out the two lines below when ready to test final routing before going live.
-    libOptions.to = 'lib-ux-testing@virginia.edu';
+    libOptions.from = frmData.sect_your_contact_information.fields.fld_email_address.value;
+    libOptions.replyTo = frmData.sect_your_contact_information.fields.fld_email_address.value;
+    libOptions.to = 'mhm8m@virginia.edu,ka7uz@virginia.edu';
     libOptions.bcc = 'jlk4p@virginia.edu';
     libOptions.subject = 'Small Special Collections Instruction Request: '+frmData.sect_your_contact_information.fields.fld_name.value;
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
@@ -929,7 +927,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     userOptions.text = stripHtml(patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
     
     try {
-        return postEmailAndData(reqId, libOptions, userOptions, specCollInstructionDatasetApi, data, sourceFiles);
+        return postEmailAndData(reqId, libOptions, userOptions, specCollInstructionDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
@@ -941,7 +939,6 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
     let inputs = msg = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_619': reqId, 'ts_start': submitted };
-    let sourceFiles = [];
     
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_name.value) {
@@ -977,7 +974,7 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
     userOptions.text = stripHtml(msg + inputs + reqText);
     
     try {
-        return postEmailAndData(reqId, libOptions, userOptions, governmentInformationDatasetApi, data, sourceFiles);
+        return postEmailAndData(reqId, libOptions, userOptions, governmentInformationDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
@@ -985,7 +982,7 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
     }
 }
 
-function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData, files) {
+function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
     requestPN({method: 'POST', uri: emailUrl, form: requestEmailOptions})
     .then(body => {
         if (body && (body.search('Status: 201 Created') !== -1)) {
