@@ -914,7 +914,6 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     libOptions.from = frmData.sect_your_contact_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_your_contact_information.fields.fld_email_address.value;
     libOptions.to = 'mhm8m@virginia.edu,ka7uz@virginia.edu';
-    libOptions.bcc = 'jlk4p@virginia.edu';
     libOptions.subject = 'Small Special Collections Instruction Request: '+frmData.sect_your_contact_information.fields.fld_name.value;
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
