@@ -1008,16 +1008,14 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
                 console.log(`LibInsight data saved for ${reqId}: `+body);
             }
             // Emails successfully sent??? So can we delete uploaded attachments for this request?
-/*            if (files.length > 0) {
+            if (requestEmailOptions.sourceFile !== "") {
                 try {
-                    for (var i=0; i < files.length; i++) {
-                        deleteFirebaseFile(files[i]);
-                    }
+                    deleteFirebaseFile(requestEmailOptions.sourceFile);
                 }
                 catch (error) {
                     return error;
                 }
-            }*/
+            }
             return result.response;
         } else {
             console.log(`Bad response from ${apiUrl}: `+body);
