@@ -786,7 +786,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
-                libOptions.attach_type = userOptions.attach_type = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type : 'attach';
+                libOptions.attach_type = userOptions.attach_type = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type : 'link';
                 libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
                 libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
