@@ -40,6 +40,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
+        attach_type: 'attach',
         sourceFile: '',
         destFile: ''
     };
@@ -52,6 +53,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         subject: '',
         text: '',
         html: '',
+        attach_type: 'attach',
         sourceFile: '',
         destFile: ''
     };
@@ -94,32 +96,6 @@ function convDateYMDtoMDY(date) {
 function convTime24to12(time) {
     let date = moment().format("YYYY-MM-DD ");
     return moment(date+time,"YYYY-MM-DD HH:mm").format("hh:mm A");
-}
-
-async function createEmailFileAttachment(sourceFile,destFile) {
-    let file = bucket.file('form_file_uploads/'+sourceFile);
-    console.log('createEmail...');
-    try {
-        const [metadata] = await file.getMetadata();
-/*        const data = await file.download();
-        let attachment = {
-            filename: destFile,
-            encoding: 'base64',
-            content: data.toString('base64')
-        };*/
-        // Provide a URL good for 30 days.
-        const url = await file.getSignedUrl({action: 'read', expires: Date.now() + (1000 * 60 * 60 * 24 * 30)});
-        let attachment = {
-            filename: destFile,
-            path: url
-        };
-        if (metadata.contentType) attachment.contentType = metadata.contentType;
-        return attachment;
-    }
-    catch (error) {
-        console.log(`Error creating attachment for ${sourceFile}: ` + error.toString());
-        return error;
-    }
 }
 
 async function deleteFirebaseFile(sourceFile) {
@@ -810,6 +786,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
+                libOptions.attach_type = userOptions.attach_type = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type : 'attach';
                 libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
                 libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
@@ -1007,8 +984,8 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
             if (result.response) {
                 console.log(`LibInsight data saved for ${reqId}: `+body);
             }
-            // Emails successfully sent??? So can we delete uploaded attachments for this request?
-            if (requestEmailOptions.sourceFile !== "") {
+            // Emails successfully sent, delete uploaded file if attached to email.
+            if (requestEmailOptions.sourceFile !== "" && requestEmailOptions.attach_type === 'attach') {
                 try {
                     deleteFirebaseFile(requestEmailOptions.sourceFile);
                 }
