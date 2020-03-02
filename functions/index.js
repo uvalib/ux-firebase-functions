@@ -15,6 +15,7 @@ const purchaseRecommendationDatasetApi = functions.config().libinsighturl.purcha
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 const specCollInstructionDatasetApi = functions.config().libinsighturl.speccollinstruction;
 const personalCopyReserveDatasetApi = functions.config().libinsighturl.personalcopyreserve;
+const researchTutorialRequestDatasetApi = functions.config().libinsighturl.researchtutorial;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
 let emailSent = true;
@@ -68,6 +69,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processSpecCollInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'personal_copy_reserve') {
         return processPersonalCopyReserveRequest(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'research_tutorial_request') {
+        return processResearchTutorialRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
@@ -1137,6 +1140,115 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     
     try {
         return postEmailAndData(reqId, libOptions, userOptions, personalCopyReserveDatasetApi, data);
+    }
+    catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
+}
+
+async function processResearchTutorialRequest(reqId, submitted, frmData, libOptions, userOptions) {
+    let requestorInfo = courseInfo = dateInfo = projInfo = requestorName = requestorEmail = msg = '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    let data = { 'field_1003': reqId, 'ts_start': submitted, 'ts_end': submitted };
+    
+    // Prepare email message body and LibInsight data parameters
+    requestorInfo += "\n<h3>"+frmData.sect_requestor_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
+        data['field_985'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_name.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
+        data['field_986'] = frmData.sect_requestor_information.fields.fld_name.value;
+        requestorName = frmData.sect_requestor_information.fields.fld_name.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_email_address.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
+        data['field_987'] = frmData.sect_requestor_information.fields.fld_email_address.value;
+        requestorEmail = frmData.sect_requestor_information.fields.fld_email_address.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_phone_number.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_phone_number.value + "<br>\n";
+        data['field_988'] = frmData.sect_requestor_information.fields.fld_phone_number.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_university_affiliation.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_affiliation.value + "<br>\n";
+        data['field_989'] = frmData.sect_requestor_information.fields.fld_university_affiliation.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
+        data['field_990'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
+        if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value === 'Other...') {
+            instructorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_other_department_or_school.value + "<br>\n";
+            data['field_991'] = frmData.sect_requestor_information.fields.fld_other_department_or_school.value;
+        }
+    }
+    requestorInfo += "</p><br>\n";
+
+    courseInfo += "\n<h3>"+frmData.sect_course_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value) {
+        if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
+            courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
+            data['field_992'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
+        }
+        if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
+            courseInfo += "<strong>Course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
+            data['field_993'] = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
+            courseNum = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
+        }
+        if (frmData.sect_course_information.fields.fld_course_section_selector.value.section) {
+            courseInfo += "<strong>Section:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.section + "<br>\n";
+            data['field_994'] = frmData.sect_course_information.fields.fld_course_section_selector.value.section;
+        }
+        if (frmData.sect_course_information.fields.fld_course_section_selector.value.title) {
+            courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.title + "<br>\n";
+            data['field_995'] = frmData.sect_course_information.fields.fld_course_section_selector.value.title;
+        }
+    }
+    courseInfo += "</p><br>\n";
+    dateInfo += "\n<h3>"+frmData.sect_tutorial_date.title+"</h3><p>\n\n";
+    if (frmData.sect_tutorial_date.fields.fld_preferred_dates.value.data && frmData.sect_tutorial_date.fields.fld_preferred_dates.value.data.length > 0) {
+        for (let i=0; i < frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime.length; i++) {
+            const choiceStr = choiceDateTimeToString(frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime[i]);
+            dateInfo += choiceStr;
+            if (choice.nth === 1) {
+                data['field_996'] = stripHtml(choiceStr);
+            } else {
+                data['field_999'] = stripHtml(choiceStr);
+            }
+        }
+    }
+    dateInfo += "</p><br>\n";
+    projInfo += "\n<h3>"+frmData.sect_project_research_topic.title+"</h3><p>\n\n";
+    if (frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value) {
+        projInfo += "<strong>" + frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.label + ":</strong> " + frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value + "<br>\n";
+        data['field_1002'] = frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value;
+    }
+    projInfo += "</p><br>\n";
+    msg = "<p>The request below was submitted through the Research Tutorial Request Form:</p><br>\n\n";
+
+    // Prepare email content for Library staff
+    libOptions.from = '"'+requestorName+'" <'+requestorEmail+'>';
+    libOptions.replyTo = requestorEmail;
+    // @TODO Routing goes to Keith Weimer: kw6m@virginia.edu
+    libOptions.to = 'jlk4p@virginia.edu';
+    libOptions.subject = 'Research tutorial requested';
+    libOptions.html = msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText;
+    libOptions.text = stripHtml(msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText);
+
+    // Prepare email confirmation content for patron
+    msg = "<p>Your request will be forwarded to the library staff member most familiar with your area of research. Staff will ";
+    msg+= "be in touch with you to arrange your consultation. Below is a copy of what you submitted.</p><br>\n\n";
+    userOptions.from = '"Keith Weimer" <kw6m@virginia.edu>';
+    userOptions.replyTo = '"Keith Weimer" <kw6m@virginia.edu>';
+    userOptions.to = requestorEmail;
+    userOptions.subject = 'Your research tutorial request';
+    userOptions.html = msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText;
+    userOptions.text = stripHtml(msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText);
+    
+    try {
+        return postEmailAndData(reqId, libOptions, userOptions, governmentInformationDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
