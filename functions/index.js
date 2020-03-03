@@ -1180,7 +1180,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
         requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
         data['field_990'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
         if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value === 'Other...') {
-            instructorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_other_department_or_school.value + "<br>\n";
+            requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_other_department_or_school.value + "<br>\n";
             data['field_991'] = frmData.sect_requestor_information.fields.fld_other_department_or_school.value;
         }
     }
