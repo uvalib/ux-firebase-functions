@@ -1208,9 +1208,9 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     }
     courseInfo += "</p><br>\n";
     dateInfo += "\n<h3>"+frmData.sect_tutorial_date.title+"</h3><p>\n\n";
-    if (frmData.sect_tutorial_date.fields.fld_preferred_dates.value.data && frmData.sect_tutorial_date.fields.fld_preferred_dates.value.data.length > 0) {
+    if (frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime && frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime.length > 0) {
         for (let i=0; i < frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime.length; i++) {
-            const choiceStr = choiceDateTimeToString(frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime[i]);
+            let choiceStr = choiceDateTimeToString(frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime[i]);
             dateInfo += choiceStr;
             if (choice.nth === 1) {
                 data['field_996'] = stripHtml(choiceStr);
@@ -1222,7 +1222,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     dateInfo += "</p><br>\n";
     projInfo += "\n<h3>"+frmData.sect_project_research_topic.title+"</h3><p>\n\n";
     if (frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value) {
-        projInfo += "<strong>" + frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.label + ":</strong> " + frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value + "<br>\n";
+        projInfo += "<strong>" + frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.label + ":</strong><br>\n" + frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value + "<br>\n";
         data['field_1002'] = frmData.sect_project_research_topic.fields.fld_please_briefly_describe_your_project_or_research_topic.value;
     }
     projInfo += "</p><br>\n";
@@ -1358,7 +1358,6 @@ function sessionLengthAndChoicesToString(data) {
         str += "<p><strong>Session length (minutes)</strong><br>\n" + data.session.sessionLength + "</p>\n\n";
     }
     for (let j=0; j < data.session.sessionDateTime.length; j++) {
-        let session = data.session.sessionDateTime[j];
         str += choiceDateTimeToString(data.session.sessionDateTime[j]);
     }
     return str;
