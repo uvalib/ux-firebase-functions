@@ -1210,7 +1210,8 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     dateInfo += "\n<h3>"+frmData.sect_tutorial_date.title+"</h3><p>\n\n";
     if (frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime && frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime.length > 0) {
         for (let i=0; i < frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime.length; i++) {
-            let choiceStr = choiceDateTimeToString(frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime[i]);
+            const choice = frmData.sect_tutorial_date.fields.fld_preferred_dates.value.sessionDateTime[i];
+            let choiceStr = choiceDateTimeToString(choice);
             dateInfo += choiceStr;
             if (choice.nth === 1) {
                 data['field_996'] = stripHtml(choiceStr);
