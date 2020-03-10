@@ -1222,7 +1222,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     userOptions.text = stripHtml(msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText);
     
     try {
-        return postEmailAndData(reqId, libOptions, userOptions, governmentInformationDatasetApi, data);
+        return postEmailAndData(reqId, libOptions, userOptions, researchTutorialRequestDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
