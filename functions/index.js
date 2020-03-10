@@ -1085,8 +1085,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     // Prepare email content for Library staff    
     libOptions.from = instructorEmail;
     libOptions.replyTo = instructorEmail;
-    // @TODO Routing goes to lib-reserves@virginia.edu in production
-    libOptions.to = 'jlk4p@virginia.edu';
+    libOptions.to = 'lib-reserves@virginia.edu';
     libOptions.subject = 'Personal Copy - ' + instructorName + ' ' + courseNum;
     if (materials === 'Media') {
         msg = "<p>RMC copy to handle media content for this personal copy request.</p><br>\n\n";
@@ -1102,7 +1101,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     userOptions.from = instructorEmail;
     userOptions.replyTo = instructorEmail;
     if (materials === 'Print materials and Media') {
-        userOptions.to = 'jlk4p@virginia.edu';
+        userOptions.to = 'lib-reserves@virginia.edu';
     } else {
         // send second unneeded email here so that it doesn't generate extra ticket in Service Desk;
         // (form workflow assumes 2 emails generated for each submission: library staff and other is confirmation) 
