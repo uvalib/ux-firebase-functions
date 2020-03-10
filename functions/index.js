@@ -1205,8 +1205,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     // Prepare email content for Library staff
     libOptions.from = '"'+requestorName+'" <'+requestorEmail+'>';
     libOptions.replyTo = requestorEmail;
-    // @TODO Routing goes to Keith Weimer: kw6m@virginia.edu
-    libOptions.to = 'jlk4p@virginia.edu';
+    libOptions.to = 'kw6m@virginia.edu';
     libOptions.subject = 'Research tutorial requested';
     libOptions.html = msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText;
     libOptions.text = stripHtml(msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText);
