@@ -1013,8 +1013,8 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     materialsInfo += "\n<h3>"+frmData.sect_materials_for_reserve.title+"</h3>\n\n<p>";
     if (frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value) {
         materialsInfo += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value + "<br>\n";
-        data['field_963'] = frmData.fields.fld_personal_items_consist_of.value;
-        materials = frmData.fields.fld_personal_items_consist_of.value;
+        data['field_963'] = frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value;
+        materials = frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value;
     }
     if (frmData.sect_materials_for_reserve.fields.fld_item_1_title.value) {
         itemDetails = '';
