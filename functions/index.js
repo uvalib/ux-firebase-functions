@@ -1011,8 +1011,9 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     courseInfo += "</p><br>\n";
 
     materialsInfo += "\n<h3>"+frmData.sect_materials_for_reserve.title+"</h3>\n\n<p>";
+    materialsInfo += "\n<strong>Personal copies will be assigned a 3 hour loan period.</strong><br><br>\n\n";
     if (frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value) {
-        materialsInfo += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value + "<br>\n";
+        materialsInfo += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value + "<br><br>\n\n";
         data['field_963'] = frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value;
         materials = frmData.sect_materials_for_reserve.fields.fld_personal_items_consist_of.value;
     }
