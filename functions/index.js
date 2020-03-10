@@ -1028,15 +1028,6 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
                 itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_1_format_print_and_media.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_1_format_print_and_media.value + "<br>\n";
             }
         }
-        if (materials === 'Print materials') {
-            if (frmData.sect_materials_for_reserve.fields.fld_item_1_loan_period_print.value) {
-                itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_1_loan_period_print.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_1_loan_period_print.value + "<br>\n";
-            }
-        } else {
-            if (frmData.sect_materials_for_reserve.fields.fld_item_1_loan_period.value) {
-                itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_1_loan_period.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_1_loan_period.value + "<br>\n";
-            }
-        }
         if (materials !== 'Media') {
             if (frmData.sect_materials_for_reserve.fields.fld_item_1_author.value) {
                 itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_1_author.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_1_author.value + "<br>\n";
@@ -1058,15 +1049,6 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
                 itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_2_format_print_and_media.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_2_format_print_and_media.value + "<br>\n";
             }
         }
-        if (materials === 'Print materials') {
-            if (frmData.sect_materials_for_reserve.fields.fld_item_2_loan_period_print.value) {
-                itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_2_loan_period_print.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_2_loan_period_print.value + "<br>\n";
-            }
-        } else {
-            if (frmData.sect_materials_for_reserve.fields.fld_item_2_loan_period.value) {
-                itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_2_loan_period.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_2_loan_period.value + "<br>\n";
-            }
-        }
         if (materials !== 'Media') {
             if (frmData.sect_materials_for_reserve.fields.fld_item_2_author.value) {
                 itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_2_author.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_2_author.value + "<br>\n";
@@ -1086,15 +1068,6 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
         if (materials === 'Print materials and Media') {
             if (frmData.sect_materials_for_reserve.fields.fld_item_3_format_print_and_media.value) {
                 itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_3_format_print_and_media.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_3_format_print_and_media.value + "<br>\n";
-            }
-        }
-        if (materials === 'Print materials') {
-            if (frmData.sect_materials_for_reserve.fields.fld_item_3_loan_period_print.value) {
-                itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_3_loan_period_print.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_3_loan_period_print.value + "<br>\n";
-            }
-        } else {
-            if (frmData.sect_materials_for_reserve.fields.fld_item_3_loan_period.value) {
-                itemDetails += "<strong>" + frmData.sect_materials_for_reserve.fields.fld_item_3_loan_period.label + ":</strong> " + frmData.sect_materials_for_reserve.fields.fld_item_3_loan_period.value + "<br>\n";
             }
         }
         if (materials !== 'Media') {
