@@ -1343,10 +1343,14 @@ function sessionLengthAndChoicesToString(data) {
     return str;
 }
 
+function paramsString(obj) {
+    return Object.keys(obj).map(key => key + '=' + encodeURIComponent(obj[key])).join('&');
+}
+
 function fetchPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
     console.log('entered fetchPostEmailAndData function');
     console.log(requestEmailOptions);
-    queryString = Object.keys(requestEmailOptions).map(key => key + '=' + requestEmailOptions[key]).join('&');
+    queryString = paramsString(requestEmailOptions);
     console.log(queryString);
     fetch(emailUrl, { method: 'POST', body: queryString, headers: header })
     .then(res => res.text())
@@ -1354,7 +1358,7 @@ function fetchPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, 
         console.log('library request email sent to emailUrl');
         if (body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Library request notification sent for ${reqId}: `+body);
-            queryString = Object.keys(confirmEmailOptions).map(key => key + '=' + confirmEmailOptions[key]).join('&');
+            queryString = paramsString(confirmEmailOptions);
             return fetch(emailUrl, { method: 'POST', body: queryString, headers: header });
         } else {
             console.log(`Library request notification failed for ${reqId}: `+body);
@@ -1366,7 +1370,7 @@ function fetchPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, 
         console.log('library confirm email sent to emailUrl');
         if(body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Patron confirmation notification sent for ${reqId}: `+body);
-            queryString = Object.keys(formData).map(key => key + '=' + formData[key]).join('&');
+            queryString = paramsString(formData);
             return fetch(apiUrl, { method: 'POST', body: queryString, headers: header });
         } else {
             console.log(`Patron confirmation notification failed for ${reqId}: `+body);
