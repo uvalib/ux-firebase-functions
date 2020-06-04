@@ -4,8 +4,10 @@ const storage = new Storage();
 const bucket = storage.bucket('uvalib-api.appspot.com'); 
 const request = require('request'); // used by requestPN
 const requestPN = require('request-promise-native');
+const fetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
+const header = {'Content-Type': 'application/x-www-form-urlencoded'};
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -18,8 +20,7 @@ const personalCopyReserveDatasetApi = functions.config().libinsighturl.personalc
 const researchTutorialRequestDatasetApi = functions.config().libinsighturl.researchtutorial;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
-let emailSent = true;
-let dataSaved = true;
+let queryString = '';
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
@@ -718,7 +719,8 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
 
     try {
-        return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
+        return fetchPostEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
+        // return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
@@ -1277,8 +1279,11 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
 }
 
 function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
+    console.log('entered postEmailAndData function');
+    console.log(requestEmailOptions);
     requestPN({method: 'POST', uri: emailUrl, form: requestEmailOptions})
     .then(body => {
+        console.log('library request email sent to emailUrl');
         if (body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Library request notification sent for ${reqId}: `+body);
             return requestPN({method: 'POST', uri: emailUrl, form: confirmEmailOptions});
@@ -1288,6 +1293,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
         }
     })
     .then(body => {
+        console.log('library confirm email sent to emailUrl');
         if(body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Patron confirmation notification sent for ${reqId}: `+body);
             return requestPN({method: 'POST', uri: apiUrl, form: formData});
@@ -1297,6 +1303,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
         }
     })
     .then(body => {
+        console.log('returned from confirm email and should write to LibInsight');
         if (body) {
             const result = JSON.parse(body);
             if (result.response) {
@@ -1334,4 +1341,64 @@ function sessionLengthAndChoicesToString(data) {
         str += choiceDateTimeToString(data.session.sessionDateTime[j]);
     }
     return str;
+}
+
+function fetchPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
+    console.log('entered fetchPostEmailAndData function');
+    console.log(requestEmailOptions);
+    queryString = Object.keys(requestEmailOptions).map(key => key + '=' + requestEmailOptions[key]).join('&');
+    console.log(queryString);
+    fetch(emailUrl, { method: 'POST', body: queryString, headers: header })
+    .then(res => res.text())
+    .then(body => {
+        console.log('library request email sent to emailUrl');
+        if (body && (body.search('Status: 201 Created') !== -1)) {
+            console.log(`Library request notification sent for ${reqId}: `+body);
+            queryString = Object.keys(confirmEmailOptions).map(key => key + '=' + confirmEmailOptions[key]).join('&');
+            return fetch(emailUrl, { method: 'POST', body: queryString, headers: header });
+        } else {
+            console.log(`Library request notification failed for ${reqId}: `+body);
+            throw new Error(`Library request notification failed for ${reqId}: `+body);
+        }
+    })
+    .then(res => res.text())
+    .then(body => {
+        console.log('library confirm email sent to emailUrl');
+        if(body && (body.search('Status: 201 Created') !== -1)) {
+            console.log(`Patron confirmation notification sent for ${reqId}: `+body);
+            queryString = Object.keys(formData).map(key => key + '=' + formData[key]).join('&');
+            return fetch(apiUrl, { method: 'POST', body: queryString, headers: header });
+        } else {
+            console.log(`Patron confirmation notification failed for ${reqId}: `+body);
+            throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
+        }
+    })
+    .then(res => res.text())
+    .then(body => {
+        console.log('returned from confirm email and should write to LibInsight');
+        if (body) {
+            const result = JSON.parse(body);
+            if (result.response) {
+                console.log(`LibInsight data saved for ${reqId}: `+body);
+            }
+            // Emails successfully sent, delete uploaded file if attached to email.
+            if (requestEmailOptions.sourceFile !== "" && requestEmailOptions.attach_type === 'attach') {
+                try {
+                    deleteFirebaseFile(requestEmailOptions.sourceFile);
+                }
+                catch (error) {
+                    return error;
+                }
+            }
+            return result.response;
+        } else {
+            console.log(`Bad response from ${apiUrl}: `+body);
+            throw new Error(`Bad response from ${apiUrl}: `+body);
+        }
+    })
+    .catch(error => function(error) {
+        console.log(`Error for request ${reqId}: `);
+        console.log(error);
+        return error;
+    });
 }
