@@ -15,7 +15,7 @@ attach_type: 'attach',
 sourceFile: '',
 destFile: '' };
 
-let mailMsg2 = { secret: 'compub123',
+let mailMsg2 = {
 from: '"UVA Library" <no-reply-library@Virginia.EDU>',
 replyTo: '"UVA Library" <NO-REPLY-LIBRARY@Virginia.EDU>',
 to: 'jlk4p@virginia.edu',
