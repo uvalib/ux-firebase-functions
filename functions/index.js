@@ -7,7 +7,7 @@ const requestPN = require('request-promise-native');
 const fetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
-const header = {'Content-Type': 'application/x-www-form-urlencoded'};
+const headerObj = {'Content-Type': 'application/x-www-form-urlencoded'};
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -719,8 +719,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     userOptions.text = stripHtml(patronMsg + biblioInfo + requestorInfo + courseInfo + reqText);
 
     try {
-        return fetchPostEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
-        // return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
+        return postEmailAndData(reqId, libOptions, userOptions, purchaseRecommendationDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
@@ -1278,7 +1277,7 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
     }
 }
 
-function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
+function requestPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
     console.log('entered postEmailAndData function');
     console.log(requestEmailOptions);
     requestPN({method: 'POST', uri: emailUrl, form: requestEmailOptions})
@@ -1347,19 +1346,19 @@ function paramsString(obj) {
     return Object.keys(obj).map(key => key + '=' + encodeURIComponent(obj[key])).join('&');
 }
 
-function fetchPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
+function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
     console.log('entered fetchPostEmailAndData function');
     console.log(requestEmailOptions);
     queryString = paramsString(requestEmailOptions);
     console.log(queryString);
-    fetch(emailUrl, { method: 'POST', body: queryString, headers: header })
+    fetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
     .then(res => res.text())
     .then(body => {
         console.log('library request email sent to emailUrl');
         if (body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Library request notification sent for ${reqId}: `+body);
             queryString = paramsString(confirmEmailOptions);
-            return fetch(emailUrl, { method: 'POST', body: queryString, headers: header });
+            return fetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj });
         } else {
             console.log(`Library request notification failed for ${reqId}: `+body);
             throw new Error(`Library request notification failed for ${reqId}: `+body);
@@ -1371,7 +1370,7 @@ function fetchPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, 
         if(body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Patron confirmation notification sent for ${reqId}: `+body);
             queryString = paramsString(formData);
-            return fetch(apiUrl, { method: 'POST', body: queryString, headers: header });
+            return fetch(apiUrl, { method: 'POST', body: queryString, headers: headerObj });
         } else {
             console.log(`Patron confirmation notification failed for ${reqId}: `+body);
             throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
