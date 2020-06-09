@@ -1292,12 +1292,9 @@ function paramsString(obj) {
 }
 
 function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
-    console.log('entered postEmailAndData function');
-    console.log(requestEmailOptions);
     queryString = paramsString(requestEmailOptions);
-    console.log(queryString);
     nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
-    .then(res => { console.log(res); return res.text() })
+    .then(res => res.text())
     .then(body => {
         console.log('library request email sent to emailUrl');
         if (body && (body.search('Status: 201 Created') !== -1)) {
