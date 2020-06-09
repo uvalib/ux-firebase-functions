@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const nodeFetch = require('node-fetch');
 const emailUrl = 'https://api.library.virginia.edu/mailer/mailer.js';
 const headerObj = {'Content-Type': 'application/x-www-form-urlencoded'};
 let queryString = '';
@@ -34,14 +34,15 @@ function paramsString(obj) {
 function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions) {
   console.log('entered postEmailAndData function');
   queryString = paramsString(requestEmailOptions);
-  fetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
-  .then(res => res.text())
+  nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
+  .then(res => { console.log(res); return res.text()})
   .then(body => {
+      console.log(body);
       console.log('library request email sent to emailUrl');
       if (body && (body.search('Status: 201 Created') !== -1)) {
           console.log(`Library request notification sent for ${reqId}: `+body);
           queryString = paramsString(confirmEmailOptions);
-          return fetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj });
+          return nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj });
       } else {
           console.log(`Library request notification failed for ${reqId}: `+body);
           throw new Error(`Library request notification failed for ${reqId}: `+body);
@@ -53,7 +54,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions) {
       if(body && (body.search('Status: 201 Created') !== -1)) {
           console.log(`Patron confirmation notification sent for ${reqId}: `+body);
           queryString = paramsString(formData);
-          return fetch(apiUrl, { method: 'POST', body: queryString, headers: headerObj });
+          return nodeFetch(apiUrl, { method: 'POST', body: queryString, headers: headerObj });
       } else {
           console.log(`Patron confirmation notification failed for ${reqId}: `+body);
           throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);

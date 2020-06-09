@@ -2,9 +2,7 @@ const functions = require('firebase-functions');
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
 const bucket = storage.bucket('uvalib-api.appspot.com'); 
-const request = require('request'); // used by requestPN
-const requestPN = require('request-promise-native');
-const fetch = require('node-fetch');
+const nodeFetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
 const headerObj = {'Content-Type': 'application/x-www-form-urlencoded'};
@@ -1277,59 +1275,6 @@ async function processGovernmentInformationRequest(reqId, submitted, frmData, li
     }
 }
 
-function requestPostEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUrl, formData) {
-    console.log('entered postEmailAndData function');
-    console.log(requestEmailOptions);
-    requestPN({method: 'POST', uri: emailUrl, form: requestEmailOptions})
-    .then(body => {
-        console.log('library request email sent to emailUrl');
-        if (body && (body.search('Status: 201 Created') !== -1)) {
-            console.log(`Library request notification sent for ${reqId}: `+body);
-            return requestPN({method: 'POST', uri: emailUrl, form: confirmEmailOptions});
-        } else {
-            console.log(`Library request notification failed for ${reqId}: `+body);
-            throw new Error(`Library request notification failed for ${reqId}: `+body);
-        }
-    })
-    .then(body => {
-        console.log('library confirm email sent to emailUrl');
-        if(body && (body.search('Status: 201 Created') !== -1)) {
-            console.log(`Patron confirmation notification sent for ${reqId}: `+body);
-            return requestPN({method: 'POST', uri: apiUrl, form: formData});
-        } else {
-            console.log(`Patron confirmation notification failed for ${reqId}: `+body);
-            throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
-        }
-    })
-    .then(body => {
-        console.log('returned from confirm email and should write to LibInsight');
-        if (body) {
-            const result = JSON.parse(body);
-            if (result.response) {
-                console.log(`LibInsight data saved for ${reqId}: `+body);
-            }
-            // Emails successfully sent, delete uploaded file if attached to email.
-            if (requestEmailOptions.sourceFile !== "" && requestEmailOptions.attach_type === 'attach') {
-                try {
-                    deleteFirebaseFile(requestEmailOptions.sourceFile);
-                }
-                catch (error) {
-                    return error;
-                }
-            }
-            return result.response;
-        } else {
-            console.log(`Bad response from ${apiUrl}: `+body);
-            throw new Error(`Bad response from ${apiUrl}: `+body);
-        }
-    })
-    .catch(error => function(error) {
-        console.log(`Error for request ${reqId}: `);
-        console.log(error);
-        return error;
-    });
-}
-
 function sessionLengthAndChoicesToString(data) {
     let str = '';
     str += "<h4>Session " + data.nth + "</h4>\n\n";
@@ -1351,14 +1296,14 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
     console.log(requestEmailOptions);
     queryString = paramsString(requestEmailOptions);
     console.log(queryString);
-    fetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
+    nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
     .then(res => { console.log(res); return res.text() })
     .then(body => {
         console.log('library request email sent to emailUrl');
         if (body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Library request notification sent for ${reqId}: `+body);
             queryString = paramsString(confirmEmailOptions);
-            return fetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj });
+            return nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj });
         } else {
             console.log(`Library request notification failed for ${reqId}: `+body);
             throw new Error(`Library request notification failed for ${reqId}: `+body);
@@ -1370,7 +1315,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
         if(body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Patron confirmation notification sent for ${reqId}: `+body);
             queryString = paramsString(formData);
-            return fetch(apiUrl, { method: 'POST', body: queryString, headers: headerObj });
+            return nodeFetch(apiUrl, { method: 'POST', body: queryString, headers: headerObj });
         } else {
             console.log(`Patron confirmation notification failed for ${reqId}: `+body);
             throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
