@@ -1272,6 +1272,8 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     }
 
     if (frmData.fld_are_you_making_this_request_on_behalf_of_someone.value) {
+        otherPerson += "<strong>" + frmData.fld_are_you_making_this_request_on_behalf_of_someone.label + ":</strong> " + frmData.fld_are_you_making_this_request_on_behalf_of_someone.value + "<br>\n";
+        data['field_1366'] = frmData.fld_are_you_making_this_request_on_behalf_of_someone.value;
         if (frmData.fld_are_you_making_this_request_on_behalf_of_someone.value === "Yes") {
             if (frmData.fld_other_person_computing_id.value) {
                 otherPerson += "<strong>" + frmData.fld_other_person_computing_id.label + ":</strong> " + frmData.fld_other_person_computing_id.value + "<br>\n";
@@ -1569,7 +1571,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
             throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
         }
     })
-    .then(res => res.text())
+    .then(res => { console.log(res); return res.text(); })
     .then(body => {
         console.log('returned from confirm email and should write to LibInsight');
         if (body) {
