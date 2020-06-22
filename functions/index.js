@@ -1237,21 +1237,21 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
 
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_what_is_the_purpose_of_this_request_.value) {
-        msg = "<strong>" + frmData.fld_what_is_the_purpose_of_this_request_.label + ":</strong> " + frmData.fld_what_is_the_purpose_of_this_request_.value + "<br>\n";
+        msg += "<strong>" + frmData.fld_what_is_the_purpose_of_this_request_.label + ":</strong> " + frmData.fld_what_is_the_purpose_of_this_request_.value + "<br>\n";
         data['field_1365'] = frmData.fld_what_is_the_purpose_of_this_request_.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_format.value) {
-        msg = "<strong>" + frmData.sect_bibliographic_information.fields.fld_format.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_format.value + "<br>\n";
+        msg += "<strong>" + frmData.sect_bibliographic_information.fields.fld_format.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_format.value + "<br>\n";
         data['field_1374'] = frmData.sect_bibliographic_information.fields.fld_format.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value) {
-        msg = "<strong>" + frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.label + ":</strong> ";
+        msg += "<strong>" + frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.label + ":</strong> ";
         msg += (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value === 1) ? 'Yes' : 'No';
         msg += "<br>\n";
         data['field_1405'] = (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value === 1) ? 'Yes' : 'No';
     }
     if (frmData.fld_is_this_a_rush_request_.value) {
-        msg = "<strong>" + frmData.fld_is_this_a_rush_request_.label + ":</strong> " + frmData.fld_is_this_a_rush_request_.value + "<br>\n";
+        msg += "<strong>" + frmData.fld_is_this_a_rush_request_.label + ":</strong> " + frmData.fld_is_this_a_rush_request_.value + "<br>\n";
         data['field_1364'] = frmData.fld_is_this_a_rush_request_.value;
     }
     msg += "<br>\n";
@@ -1471,7 +1471,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = msg + biblioInfo + requestorInfo + otherPerson + reqText;
     userOptions.text = stripHtml(msg + biblioInfo + requestorInfo + otherPerson + reqText);
-
+    console.log(data);
     try {
         return postEmailAndData(reqId, libOptions, userOptions, staffPurchaseRequestDatasetApi, data);
     }
@@ -1571,7 +1571,7 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
             throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
         }
     })
-    .then(res => { console.log(res); return res.text(); })
+    .then(res => res.text())
     .then(body => {
         console.log('returned from confirm email and should write to LibInsight');
         if (body) {
