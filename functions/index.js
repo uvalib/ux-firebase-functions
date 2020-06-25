@@ -1568,7 +1568,7 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
         data['field_1421'] = Object.keys(frmData.sect_equipment_and_room.fields.fld_equipment.value).join(', ');
         if (frmData.sect_equipment_and_room.fields.fld_equipment.value.hasOwnProperty("Other")) {
             if (frmData.sect_equipment_and_room.fields.fld_other_equipment.value) {
-                equipmentSpaceInfo += "<strong>" + frmData.sect_equipment_and_room.fields.fld_other_equipment.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_other_equipment.value + "<br>\n";
+                equipmentSpaceInfo += "<strong>" + frmData.sect_equipment_and_room.fields.fld_other_equipment.label + "</strong><br>\n" + frmData.sect_equipment_and_room.fields.fld_other_equipment.value + "<br>\n";
                 data['field_1422'] = frmData.sect_equipment_and_room.fields.fld_other_equipment.value;
             }
         }
@@ -1683,7 +1683,6 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
     nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
     .then(res => res.text())
     .then(body => {
-        console.log('library request email sent to emailUrl');
         if (body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Library request notification sent for ${reqId}: `+body);
             queryString = paramsString(confirmEmailOptions);
@@ -1695,7 +1694,6 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
     })
     .then(res => res.text())
     .then(body => {
-        console.log('library confirm email sent to emailUrl');
         if(body && (body.search('Status: 201 Created') !== -1)) {
             console.log(`Patron confirmation notification sent for ${reqId}: `+body);
             queryString = paramsString(formData);
