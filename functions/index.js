@@ -1547,7 +1547,7 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
         for (let i=0; i < frmData.sect_preferred_date_of_event.fields.fld_first_and_second_choices.value.sessionDateTime.length; i++) {
             const choice = frmData.sect_preferred_date_of_event.fields.fld_first_and_second_choices.value.sessionDateTime[i];
             let choiceStr = choiceDateTimeToString(choice);
-            dateInfo += choiceStr;
+            preferredDateInfo += choiceStr;
             if (choice.nth === 1) {
                 data['field_1419'] = stripHtml(choiceStr);
             } else {
