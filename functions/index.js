@@ -1508,9 +1508,9 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
         requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_phone_number.value + "<br>\n";
         data['field_1412'] = frmData.sect_requestor_information.fields.fld_phone_number.value;
     }
-    if (frmData.sect_requestor_information.fld_requesting_on_behalf_of_area_department.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fld_requesting_on_behalf_of_area_department.label + ":</strong> " + frmData.sect_requestor_information.fld_requesting_on_behalf_of_area_department.value + "<br>\n";
-        data['field_1413'] = frmData.sect_requestor_information.fld_requesting_on_behalf_of_area_department.value;
+    if (frmData.sect_requestor_information.fields.fld_requesting_on_behalf_of_area_department.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_requesting_on_behalf_of_area_department.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_requesting_on_behalf_of_area_department.value + "<br>\n";
+        data['field_1413'] = frmData.sect_requestor_information.fields.fld_requesting_on_behalf_of_area_department.value;
     }
     requestorInfo += "</p><br>\n";
 
