@@ -1236,26 +1236,26 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
 
 async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let msg = otherPerson = biblioInfo = requestorInfo = '';
-    let data = { 'field_1408': reqId, 'ts_start': submitted };
+    let data = { 'field_1525': reqId, 'ts_start': submitted };
 
     // Prepare email message body and LibInsight data parameters
     if (frmData.fld_what_is_the_purpose_of_this_request_.value) {
         msg += "<strong>" + frmData.fld_what_is_the_purpose_of_this_request_.label + ":</strong> " + frmData.fld_what_is_the_purpose_of_this_request_.value + "<br>\n";
-        data['field_1365'] = frmData.fld_what_is_the_purpose_of_this_request_.value;
+        data['field_1482'] = frmData.fld_what_is_the_purpose_of_this_request_.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_format.value) {
         msg += "<strong>" + frmData.sect_bibliographic_information.fields.fld_format.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_format.value + "<br>\n";
-        data['field_1374'] = frmData.sect_bibliographic_information.fields.fld_format.value;
+        data['field_1491'] = frmData.sect_bibliographic_information.fields.fld_format.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value) {
         msg += "<strong>" + frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.label + ":</strong> ";
         msg += (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value === 1) ? 'Yes' : 'No';
         msg += "<br>\n";
-        data['field_1405'] = (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value === 1) ? 'Yes' : 'No';
+        data['field_1522'] = (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available.value === 1) ? 'Yes' : 'No';
     }
     if (frmData.fld_is_this_a_rush_request_.value) {
         msg += "<strong>" + frmData.fld_is_this_a_rush_request_.label + ":</strong> " + frmData.fld_is_this_a_rush_request_.value + "<br>\n";
-        data['field_1364'] = frmData.fld_is_this_a_rush_request_.value;
+        data['field_1481'] = frmData.fld_is_this_a_rush_request_.value;
     }
     msg += "<br>\n";
 
@@ -1263,35 +1263,35 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     requestorInfo += "\n<h3>Requested by</h3>\n\n<p>";
     if (frmData.sect_requestor_information.fields.fld_name.value) {
         requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
-        data['field_1372'] = frmData.sect_requestor_information.fields.fld_name.value;
+        data['field_1489'] = frmData.sect_requestor_information.fields.fld_name.value;
     }
     if (frmData.sect_requestor_information.fields.fld_email_address.value) {
         requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
-        data['field_1373'] = frmData.sect_requestor_information.fields.fld_email_address.value;
+        data['field_1490'] = frmData.sect_requestor_information.fields.fld_email_address.value;
     }
     if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
         requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
-        data['field_1371'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
+        data['field_1488'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
     }
     if (frmData.fld_are_you_making_this_request_on_behalf_of_someone.value) {
         otherPerson += "<strong>" + frmData.fld_are_you_making_this_request_on_behalf_of_someone.label + ":</strong> " + frmData.fld_are_you_making_this_request_on_behalf_of_someone.value + "<br>\n";
-        data['field_1366'] = frmData.fld_are_you_making_this_request_on_behalf_of_someone.value;
+        data['field_1483'] = frmData.fld_are_you_making_this_request_on_behalf_of_someone.value;
         if (frmData.fld_are_you_making_this_request_on_behalf_of_someone.value === "Yes") {
             if (frmData.fld_other_person_computing_id.value) {
                 otherPerson += "<strong>" + frmData.fld_other_person_computing_id.label + ":</strong> " + frmData.fld_other_person_computing_id.value + "<br>\n";
-                data['field_1367'] = frmData.fld_other_person_computing_id.value;
+                data['field_1484'] = frmData.fld_other_person_computing_id.value;
             }
             if (frmData.fld_other_person_department_or_school.value) {
                 otherPerson += "<strong>" + frmData.fld_other_person_department_or_school.label + ":</strong> " + frmData.fld_other_person_department_or_school.value + "<br>\n";
-                data['field_1368'] = frmData.fld_other_person_department_or_school.value;
+                data['field_1485'] = frmData.fld_other_person_department_or_school.value;
                 if (frmData.fld_other_person_department_or_school.value === "Other...") {
                     otherPerson += "<strong>" + frmData.fld_other_person_other_department_or_school.label + ":</strong> " + frmData.fld_other_person_other_department_or_school.value + "<br>\n";
-                    data['field_1369'] = frmData.fld_other_person_other_department_or_school.value;
+                    data['field_1486'] = frmData.fld_other_person_other_department_or_school.value;
                 }
             }
             if (frmData.fld_please_explain_why_you_are_submitting_on_someone_behalf.value) {
                 otherPerson += "<strong>" + frmData.fld_please_explain_why_you_are_submitting_on_someone_behalf.label + ":</strong><br>\n" + frmData.fld_please_explain_why_you_are_submitting_on_someone_behalf.value + "<br>\n";
-                data['field_1370'] = frmData.fld_please_explain_why_you_are_submitting_on_someone_behalf.value;
+                data['field_1487'] = frmData.fld_please_explain_why_you_are_submitting_on_someone_behalf.value;
             }
         }
     }
@@ -1301,139 +1301,139 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     biblioInfo += "\n<h3>" + frmData.sect_bibliographic_information.title + "</h3>\n\n<p>";
     if (frmData.sect_bibliographic_information.fields.fld_isbn.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_isbn.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_isbn.value + "<br>\n";
-        data['field_1390'] = frmData.sect_bibliographic_information.fields.fld_isbn.value;
+        data['field_1507'] = frmData.sect_bibliographic_information.fields.fld_isbn.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_title.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_title.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_title.value + "<br>\n";
-        data['field_1375'] = frmData.sect_bibliographic_information.fields.fld_title.value;
+        data['field_1492'] = frmData.sect_bibliographic_information.fields.fld_title.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_name_title.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_name_title.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_name_title.value + "<br>\n";
-        data['field_1376'] = frmData.sect_bibliographic_information.fields.fld_name_title.value;
+        data['field_1493'] = frmData.sect_bibliographic_information.fields.fld_name_title.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_author_editor.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_author_editor.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_author_editor.value + "<br>\n";
-        data['field_1377'] = frmData.sect_bibliographic_information.fields.fld_author_editor.value;
+        data['field_1494'] = frmData.sect_bibliographic_information.fields.fld_author_editor.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_author.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_author.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_author.value + "<br>\n";
-        data['field_1378'] = frmData.sect_bibliographic_information.fields.fld_author.value;
+        data['field_1495'] = frmData.sect_bibliographic_information.fields.fld_author.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_director.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_director.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_director.value + "<br>\n";
-        data['field_1379'] = frmData.sect_bibliographic_information.fields.fld_director.value;
+        data['field_1496'] = frmData.sect_bibliographic_information.fields.fld_director.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_composer_s_if_applicable.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_composer_s_if_applicable.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_composer_s_if_applicable.value + "<br>\n";
-        data['field_1380'] = frmData.sect_bibliographic_information.fields.fld_composer_s_if_applicable.value;
+        data['field_1497'] = frmData.sect_bibliographic_information.fields.fld_composer_s_if_applicable.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_performer_s_.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_performer_s_.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_performer_s_.value + "<br>\n";
-        data['field_1381'] = frmData.sect_bibliographic_information.fields.fld_performer_s_.value;
+        data['field_1498'] = frmData.sect_bibliographic_information.fields.fld_performer_s_.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_composer_editor.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_composer_editor.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_composer_editor.value + "<br>\n";
-        data['field_1382'] = frmData.sect_bibliographic_information.fields.fld_composer_editor.value;
+        data['field_1499'] = frmData.sect_bibliographic_information.fields.fld_composer_editor.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_publisher.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_publisher.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_publisher.value + "<br>\n";
-        data['field_1383'] = frmData.sect_bibliographic_information.fields.fld_publisher.value;
+        data['field_1500'] = frmData.sect_bibliographic_information.fields.fld_publisher.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_music_publisher.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_music_publisher.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_music_publisher.value + "<br>\n";
-        data['field_1383'] = frmData.sect_bibliographic_information.fields.fld_music_publisher.value;
+        data['field_1500'] = frmData.sect_bibliographic_information.fields.fld_music_publisher.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_creator_publisher_vendor.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_creator_publisher_vendor.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_creator_publisher_vendor.value + "<br>\n";
-        data['field_1384'] = frmData.sect_bibliographic_information.fields.fld_creator_publisher_vendor.value;
+        data['field_1501'] = frmData.sect_bibliographic_information.fields.fld_creator_publisher_vendor.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_publisher_vendor.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_publisher_vendor.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_publisher_vendor.value + "<br>\n";
-        data['field_1385'] = frmData.sect_bibliographic_information.fields.fld_publisher_vendor.value;
+        data['field_1502'] = frmData.sect_bibliographic_information.fields.fld_publisher_vendor.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_producer_publisher_creator.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_producer_publisher_creator.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_producer_publisher_creator.value + "<br>\n";
-        data['field_1386'] = frmData.sect_bibliographic_information.fields.fld_producer_publisher_creator.value;
+        data['field_1503'] = frmData.sect_bibliographic_information.fields.fld_producer_publisher_creator.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_institution_granting_degree_.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_institution_granting_degree_.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_institution_granting_degree_.value + "<br>\n";
-        data['field_1387'] = frmData.sect_bibliographic_information.fields.fld_institution_granting_degree_.value;
+        data['field_1504'] = frmData.sect_bibliographic_information.fields.fld_institution_granting_degree_.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_record_label.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_record_label.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_record_label.value + "<br>\n";
-        data['field_1388'] = frmData.sect_bibliographic_information.fields.fld_record_label.value;
+        data['field_1505'] = frmData.sect_bibliographic_information.fields.fld_record_label.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_date_of_publication.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_date_of_publication.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_date_of_publication.value + "<br>\n";
-        data['field_1389'] = frmData.sect_bibliographic_information.fields.fld_date_of_publication.value;
+        data['field_1506'] = frmData.sect_bibliographic_information.fields.fld_date_of_publication.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_release_date.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_release_date.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_release_date.value + "<br>\n";
-        data['field_1391'] = frmData.sect_bibliographic_information.fields.fld_release_date.value;
+        data['field_1508'] = frmData.sect_bibliographic_information.fields.fld_release_date.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_year_of_publication.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_year_of_publication.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_year_of_publication.value + "<br>\n";
-        data['field_1392'] = frmData.sect_bibliographic_information.fields.fld_year_of_publication.value;
+        data['field_1509'] = frmData.sect_bibliographic_information.fields.fld_year_of_publication.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_production_date_year_only_.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_production_date_year_only_.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_production_date_year_only_.value + "<br>\n";
-        data['field_1393'] = frmData.sect_bibliographic_information.fields.fld_production_date_year_only_.value;
+        data['field_1510'] = frmData.sect_bibliographic_information.fields.fld_production_date_year_only_.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_edition.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_edition.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_edition.value + "<br>\n";
-        data['field_1394'] = frmData.sect_bibliographic_information.fields.fld_edition.value;
+        data['field_1511'] = frmData.sect_bibliographic_information.fields.fld_edition.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_edition_version.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_edition_version.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_edition_version.value + "<br>\n";
-        data['field_1395'] = frmData.sect_bibliographic_information.fields.fld_edition_version.value;
+        data['field_1512'] = frmData.sect_bibliographic_information.fields.fld_edition_version.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value + "<br>\n";
-        data['field_1396'] = frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value;
+        data['field_1513'] = frmData.sect_bibliographic_information.fields.fld_version_info_if_applicable_.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not.value + "<br>\n";
-        data['field_1397'] = frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not.value;
+        data['field_1514'] = frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_resources_do_not.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_subscriptions_do_not.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_subscriptions_do_not.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_subscriptions_do_not.value + "<br>\n";
-        data['field_1398'] = frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_subscriptions_do_not.value;
+        data['field_1515'] = frmData.sect_bibliographic_information.fields.fld_what_does_this_cover_that_existing_subscriptions_do_not.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_journal.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_journal.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_journal.value + "<br>\n";
-        data['field_1399'] = frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_journal.value;
+        data['field_1516'] = frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_journal.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.value + "<br>\n";
-        data['field_1399'] = frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.value;
+        data['field_1516'] = frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value + "<br>\n";
-        data['field_1400'] = frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value;
+        data['field_1517'] = frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_please_propose_a_journal_to_cancel.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_please_propose_a_journal_to_cancel.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_please_propose_a_journal_to_cancel.value + "<br>\n";
-        data['field_1401'] = frmData.sect_bibliographic_information.fields.fld_please_propose_a_journal_to_cancel.value;
+        data['field_1518'] = frmData.sect_bibliographic_information.fields.fld_please_propose_a_journal_to_cancel.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_how_important_is_this_resource_on_a_scale_of_1_to_5.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_how_important_is_this_resource_on_a_scale_of_1_to_5.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_how_important_is_this_resource_on_a_scale_of_1_to_5.value + "<br>\n";
-        data['field_1402'] = frmData.sect_bibliographic_information.fields.fld_how_important_is_this_resource_on_a_scale_of_1_to_5.value;
+        data['field_1519'] = frmData.sect_bibliographic_information.fields.fld_how_important_is_this_resource_on_a_scale_of_1_to_5.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_location_to_purchase_url.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_location_to_purchase_url.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_location_to_purchase_url.value + "<br>\n";
-        data['field_1403'] = frmData.sect_bibliographic_information.fields.fld_location_to_purchase_url.value;
+        data['field_1520'] = frmData.sect_bibliographic_information.fields.fld_location_to_purchase_url.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_price.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_price.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_price.value + "<br>\n";
-        data['field_1404'] = frmData.sect_bibliographic_information.fields.fld_price.value;
+        data['field_1521'] = frmData.sect_bibliographic_information.fields.fld_price.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_additional_comments.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_additional_comments.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_additional_comments.value + "<br>\n";
-        data['field_1406'] = frmData.sect_bibliographic_information.fields.fld_additional_comments.value;
+        data['field_1523'] = frmData.sect_bibliographic_information.fields.fld_additional_comments.value;
     }
     if (frmData.sect_bibliographic_information.fields.fld_description_comments.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_description_comments.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_description_comments.value + "<br>\n";
-        data['field_1407'] = frmData.sect_bibliographic_information.fields.fld_description_comments.value;
+        data['field_1524'] = frmData.sect_bibliographic_information.fields.fld_description_comments.value;
     }
     biblioInfo += "</p><br>\n";
 
@@ -1465,8 +1465,6 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
         }
     }
 
-    // @TODO comment out the line below when ready to test final routing before going live.
-    libOptions.to = 'jlk4p@virginia.edu';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = msg + biblioInfo + requestorInfo + otherPerson + reqText;
     libOptions.text = stripHtml(msg + biblioInfo + requestorInfo + otherPerson + reqText);
@@ -1593,8 +1591,6 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
     libOptions.from = '"' + frmData.sect_requestor_information.fields.fld_name.value + '" <' + frmData.sect_requestor_information.fields.fld_email_address.value + '>';
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.to = 'libevents@virginia.edu'
-    // @TODO comment out the line below when ready to test final routing before going live.
-    libOptions.to = 'jlk4p@virginia.edu';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = requestorInfo + reservationInfo + preferredDateInfo + equipmentSpaceInfo + msg + reqText;
     libOptions.text = stripHtml(requestorInfo + reservationInfo + preferredDateInfo + equipmentSpaceInfo + msg + reqText);
