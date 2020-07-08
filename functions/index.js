@@ -1235,7 +1235,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
 }
 
 async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let msg = otherPerson = biblioInfo = requestorInfo = '';
+    let msg = subjPrefix = otherPerson = biblioInfo = requestorInfo = '';
     let data = { 'field_1525': reqId, 'ts_start': submitted };
 
     // Prepare email message body and LibInsight data parameters
@@ -1256,6 +1256,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     if (frmData.fld_is_this_a_rush_request_.value) {
         msg += "<strong>" + frmData.fld_is_this_a_rush_request_.label + ":</strong> " + frmData.fld_is_this_a_rush_request_.value + "<br>\n";
         data['field_1481'] = frmData.fld_is_this_a_rush_request_.value;
+        subjPrefix = (frmData.fld_is_this_a_rush_request_.value === "Yes") ? "Rush: " : "";
     }
     msg += "<br>\n";
 
@@ -1439,7 +1440,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
 
 
     // Prepare email content for Library staff
-    libOptions.subject += 'Staff Purchase Request';
+    libOptions.subject = subjPrefix + 'Staff Purchase Request';
     libOptions.from = '"' + frmData.sect_requestor_information.fields.fld_name.value + '" <' + frmData.sect_requestor_information.fields.fld_email_address.value + '>';
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     // Routing varies based on format
@@ -1470,7 +1471,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     libOptions.text = stripHtml(msg + biblioInfo + requestorInfo + otherPerson + reqText);
 
     // Prepare email confirmation content for staff
-    userOptions.subject += 'Staff Purchase Request';
+    userOptions.subject = subjPrefix + 'Staff Purchase Request';
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = msg + biblioInfo + requestorInfo + otherPerson + reqText;
     userOptions.text = stripHtml(msg + biblioInfo + requestorInfo + otherPerson + reqText);
