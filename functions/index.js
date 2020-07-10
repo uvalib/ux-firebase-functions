@@ -17,6 +17,7 @@ const internalRoomRequestDatasetApi = functions.config().libinsighturl.internalr
 const specCollInstructionDatasetApi = functions.config().libinsighturl.speccollinstruction;
 const personalCopyReserveDatasetApi = functions.config().libinsighturl.personalcopyreserve;
 const researchTutorialRequestDatasetApi = functions.config().libinsighturl.researchtutorial;
+const requestLibraryClassDatasetApi = functions.config().libinsighturl.libraryclass;
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
@@ -66,6 +67,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
     console.log(`${formId}: ${requestId}`);
     if ((formId === 'purchase_requests') || (formId === 'purchase_request_limited_functio')) {
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'request_a_library_class') {
+        return processLibraryClassRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'class_visits_and_instruction') {
         return processSpecCollInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'personal_copy_reserve') {
@@ -730,6 +733,149 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         return error;
     }
 }
+async function processLibraryClassRequest(reqId, submitted, frmData, libOptions, userOptions) {
+    let instructorInfo = courseInfo = classPlanInfo = scheduleInfo = '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    let adminMsg = "<p><strong>* This email may contain attachments. It is recommended that you scan any attachments to make sure they do not contain a virus.</strong></p>\n\n";
+    let patronMsg = "<p>Thank you for requesting a class with the Library. This email contains a copy of the information you submitted.</p><br>\n\n";
+    patronMsg += "<p>Please contact libraryinstruction@virginia.edu if you have questions regarding this request.</p><br>\n\n";
+    let data = { 'field_1550': reqId, 'ts_start': submitted };
+
+    // Create instructor info output content and set appropriate LibInsight fields.
+    instructorInfo += "\n<h3>"+frmData.sect_instructor_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_instructor_information.fields.fld_computing_id.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_computing_id.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_computing_id.value + "<br>\n";
+        data['field_1545'] = frmData.sect_instructor_information.fields.fld_computing_id.value;
+    }
+    if (frmData.sect_instructor_information.fields.fld_name.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_name.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_name.value + "<br>\n";
+        data['field_1546'] = frmData.sect_instructor_information.fields.fld_name.value;
+    }
+    if (frmData.sect_instructor_information.fields.fld_email_address.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_email_address.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_email_address.value + "<br>\n";
+        data['field_1547'] = frmData.sect_instructor_information.fields.fld_email_address.value;
+    }
+    if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_department_or_school.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_university_department_or_school.value + "<br>\n";
+        data['field_1548'] = frmData.sect_instructor_information.fields.fld_university_department_or_school.value;
+        if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value === "Other..." 
+            && frmData.sect_instructor_information.fields.fld_other_department_or_school.value) {
+            instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_other_department_or_school.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_other_department_or_school.value + "<br>\n";
+            data['field_1549'] = frmData.sect_instructor_information.fields.fld_other_department_or_school.value;
+        }
+    }
+    instructorInfo += "</p><br>\n";
+    // Create course info output content and set appropriate LibInsight fields.
+    courseInfo += "\n<h3>"+frmData.sect_course_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
+        courseInfo += "<strong>Term</strong><br>\n" + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
+        data['field_1528'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
+    }
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
+        courseInfo += "<strong>Course</strong><br>\n" + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
+        data['field_1529'] = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
+    }
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value.section) {
+        courseInfo += "<strong>Course section</strong><br>\n" + frmData.sect_course_information.fields.fld_course_section_selector.value.section + "<br>\n";
+        data['field_1530'] = frmData.sect_course_information.fields.fld_course_section_selector.value.section;
+    }
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value.title) {
+        courseInfo += "<strong>Course title</strong><br>\n" + frmData.sect_course_information.fields.fld_course_section_selector.value.title + "<br>\n";
+        data['field_1531'] = frmData.sect_course_information.fields.fld_course_section_selector.value.title;
+    }
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime) {
+        courseInfo += "<strong>Meeting time</strong><br>\n" + frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime + "<br>\n";
+        data['field_1532'] = frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime;
+    }
+    if (frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment) {
+        courseInfo += "<strong>Enrollment</strong><br>\n" + frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment + "<br>\n";
+        data['field_1533'] = frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment;
+    }
+    courseInfo += "</p><br>\n";
+    // Create schedule info output content and set appropriate LibInsight fields.
+    scheduleInfo += "\n<h3>"+frmData.sect_scheduling_information.title+"</h3>\n\n";
+    if (frmData.sect_scheduling_information.fields.fld_preferred_dates_for_sessions.value.data && frmData.sect_scheduling_information.fields.fld_preferred_dates_for_sessions.value.data.length > 0) {
+        let numSessions = 0;
+        for (let i=0; i < frmData.sect_scheduling_information.fields.fld_preferred_dates_for_sessions.value.data.length; i++) {
+            if (frmData.sect_scheduling_information.fields.fld_preferred_dates_for_sessions.value.data[i].show) numSessions++;
+        }
+        scheduleInfo += "<p><strong>Sessions requested</strong><br>\n" + numSessions + "<br>\n</p>";
+        data['field_1551'] = numSessions;
+        for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
+            const session = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
+            if (session.show) {
+                const sessionText = sessionLengthAndChoicesToString(session);
+                scheduleInfo += sessionText + "<hr>";
+                if (session.nth === 1) {
+                    data['field_1535'] = stripHtml(sessionText);
+                } else if (session.nth === 2) {
+                    data['field_1537'] = stripHtml(sessionText);
+                } else {
+                    data['field_1539'] = stripHtml(sessionText);
+                }
+            }
+        }
+    }
+    scheduleInfo += "<br>\n";
+    // Create class planning info output content and set appropriate LibInsight fields.
+    classPlanInfo += "\n<h3>"+frmData.sect_class_planning.title+"</h3>\n\n<p>";
+    if (frmData.sect_class_planning.fields.fld_what_kind_of_software.value) {
+        classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_what_kind_of_software.label + "</strong><br>\n" + frmData.sect_class_planning.fields.fld_what_kind_of_software.value + "<br>\n";
+        data['field_1540'] = frmData.sect_class_planning.fields.fld_what_kind_of_software.value;
+    }
+    if (frmData.sect_class_planning.fields.fld_course_syllabus.value && (frmData.sect_class_planning.fields.fld_course_syllabus.value.fids.length > 0)) {
+        const firebaseFilename = (frmData.sect_class_planning.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_class_planning.fields.fld_course_syllabus.value.fids[0] : '';
+        if (firebaseFilename !== "") {
+            libOptions.attach_type = userOptions.attach_type = (frmData.sect_class_planning.fields.fld_course_syllabus.email_type) ? frmData.sect_class_planning.fields.fld_course_syllabus.email_type : 'link';
+            libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
+            libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+            courseInfo += "<strong>" + frmData.sect_class_planning.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
+            data['field_1541'] = firebaseFilename;
+        }
+    }
+    if (frmData.sect_class_planning.fields.fld_course_objectives_or_learning_outcomes.value) {
+        classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_course_objectives_or_learning_outcomes.label + "</strong><br>\n" + frmData.sect_class_planning.fields.fld_course_objectives_or_learning_outcomes.value + "<br>\n";
+        data['field_1542'] = frmData.sect_class_planning.fields.fld_course_objectives_or_learning_outcomes.value;
+    }
+    if (frmData.sect_class_planning.fields.fld_assigment_sheet.value && (frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids.length > 0)) {
+        const firebaseFilename = (frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids.length > 0) ? frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids[0] : '';
+        if (firebaseFilename !== "") {
+            libOptions.attach_type1 = userOptions.attach_type = (frmData.sect_class_planning.fields.fld_assigment_sheet.email_type) ? frmData.sect_class_planning.fields.fld_assigment_sheet.email_type : 'link';
+            libOptions.sourceFile1 = userOptions.sourceFile1 = firebaseFilename;
+            libOptions.destFile1 = userOptions.destFile1 = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+            courseInfo += "<strong>" + frmData.sect_class_planning.fields.fld_assigment_sheet.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
+            data['field_1543'] = firebaseFilename;
+        }
+    }
+    if (frmData.sect_class_planning.fields.fld_who_have_you_consulted_with.value) {
+        classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_who_have_you_consulted_with.label + "</strong><br>\n" + frmData.sect_class_planning.fields.fld_who_have_you_consulted_with.value + "<br>\n";
+        data['field_1544'] = frmData.sect_class_planning.fields.fld_who_have_you_consulted_with.value;
+    }
+    classPlanInfo += "</p><br>\n";
+
+    libOptions.from = frmData.sect_instructor_information.fields.fld_email_address.value;
+    libOptions.replyTo = frmData.sect_instructor_information.fields.fld_email_address.value;
+    libOptions.to = 'jkelly@virginia.edu'; //'libraryinstruction@virginia.edu';
+    libOptions.subject = 'Library Class Request';
+    libOptions.html = adminMsg + patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText;
+    libOptions.text = stripHtml(adminMsg + patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText);
+    console.log(libOptions);
+
+    // Prepare email confirmation content for patron
+    userOptions.from = '"Teaching and Learning Instruction" <libraryinstruction@virginia.edu>';
+    userOptions.subject = 'Library Class Request';
+    userOptions.to = frmData.sect_instructor_information.fields.fld_email_address.value;
+    userOptions.html = patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText;
+    userOptions.text = stripHtml(patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText);
+    
+    try {
+        return postEmailAndData(reqId, libOptions, userOptions, requestLibraryClassDatasetApi, data);
+    }
+    catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
+}
 
 async function processSpecCollInstructionRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let contactInfo = courseInfo = sessionInfo = scheduleInfo = commentInfo = '';
@@ -905,7 +1051,6 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     libOptions.subject = 'Small Special Collections Instruction Request: '+frmData.sect_your_contact_information.fields.fld_name.value;
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
-    console.log(libOptions);
 
     // Prepare email confirmation content for patron
     userOptions.subject = 'Small Special Collections Instruction Request';
@@ -1475,7 +1620,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = msg + biblioInfo + requestorInfo + otherPerson + reqText;
     userOptions.text = stripHtml(msg + biblioInfo + requestorInfo + otherPerson + reqText);
-    console.log(data);
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, staffPurchaseRequestDatasetApi, data);
     }
@@ -1702,7 +1847,6 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
     })
     .then(res => res.text())
     .then(body => {
-        console.log('returned from confirm email and should write to LibInsight');
         if (body) {
             const result = JSON.parse(body);
             if (result.response) {
