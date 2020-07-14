@@ -829,7 +829,7 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
             libOptions.attach_type = userOptions.attach_type = (frmData.sect_class_planning.fields.fld_course_syllabus.email_type) ? frmData.sect_class_planning.fields.fld_course_syllabus.email_type : 'link';
             libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
             libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
-            courseInfo += "<strong>" + frmData.sect_class_planning.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
+            classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
             data['field_1541'] = firebaseFilename;
         }
     }
@@ -840,10 +840,10 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
     if (frmData.sect_class_planning.fields.fld_assigment_sheet.value && (frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids.length > 0)) {
         const firebaseFilename = (frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids.length > 0) ? frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids[0] : '';
         if (firebaseFilename !== "") {
-            libOptions.attach_type1 = userOptions.attach_type = (frmData.sect_class_planning.fields.fld_assigment_sheet.email_type) ? frmData.sect_class_planning.fields.fld_assigment_sheet.email_type : 'link';
+            libOptions.attach_type1 = userOptions.attach_type1 = (frmData.sect_class_planning.fields.fld_assigment_sheet.email_type) ? frmData.sect_class_planning.fields.fld_assigment_sheet.email_type : 'link';
             libOptions.sourceFile1 = userOptions.sourceFile1 = firebaseFilename;
             libOptions.destFile1 = userOptions.destFile1 = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
-            courseInfo += "<strong>" + frmData.sect_class_planning.fields.fld_assigment_sheet.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
+            classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_assigment_sheet.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
             data['field_1543'] = firebaseFilename;
         }
     }
@@ -859,7 +859,6 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
     libOptions.subject = 'Library Class Request';
     libOptions.html = adminMsg + patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText);
-    console.log(libOptions);
 
     // Prepare email confirmation content for patron
     userOptions.from = '"Teaching and Learning Instruction" <libraryinstruction@virginia.edu>';
