@@ -153,6 +153,9 @@ function getFormFields(formDefn) {
             fields[field] = { title: formDefn[i].title, fields: getSectionFields(formDefn[i]) };
         } else if (field.match(/^fld_|authenticated/)) {
             fields[field] = { label: formDefn[i].title, value: formDefn[i].value };
+            if (formDefn[i].type === 'file' && formDefn[i].email_type) {
+                fields[field].email_type = formDefn[i].email_type;
+            }
         } else if (field.match(/^fldset_/)) {
             // @TODO need to flesh this out some depending on ways might use this down the road...
         }
@@ -166,6 +169,9 @@ function getSectionFields(section) {
     for (var key in section) {
         if (key.match(/^fld_/)) {
             fields[key] = { label: section[key].title, value: section[key].value };
+            if (section[key].type === 'file' && section[key].email_type) {
+                fields[key].email_type = section[key].email_type;
+            }
         }
         // @TODO address fieldset down the road?
     }
@@ -832,11 +838,11 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
     if (frmData.sect_class_planning.fields.fld_course_syllabus.value && (frmData.sect_class_planning.fields.fld_course_syllabus.value.fids.length > 0)) {
         const firebaseFilename = (frmData.sect_class_planning.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_class_planning.fields.fld_course_syllabus.value.fids[0] : '';
         if (firebaseFilename !== "") {
-            libOptions.attach_type = userOptions.attach_type = (frmData.sect_class_planning.fields.fld_course_syllabus.email_type) ? frmData.sect_class_planning.fields.fld_course_syllabus.email_type : 'link';
+            libOptions.attach_type = userOptions.attach_type = (frmData.sect_class_planning.fields.fld_course_syllabus.email_type) ? frmData.sect_class_planning.fields.fld_course_syllabus.email_type : 'attach';
             libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
             libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
             classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
-            data['field_1541'] = firebaseFilename;
+            data['field_1541'] = libOptions.destFile;  //since this file upload is an attachment, use the actual file name uploaded in LibInsight
         }
     }
     if (frmData.sect_class_planning.fields.fld_course_objectives_or_learning_outcomes.value) {
@@ -846,11 +852,11 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
     if (frmData.sect_class_planning.fields.fld_assigment_sheet.value && (frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids.length > 0)) {
         const firebaseFilename = (frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids.length > 0) ? frmData.sect_class_planning.fields.fld_assigment_sheet.value.fids[0] : '';
         if (firebaseFilename !== "") {
-            libOptions.attach_type1 = userOptions.attach_type1 = (frmData.sect_class_planning.fields.fld_assigment_sheet.email_type) ? frmData.sect_class_planning.fields.fld_assigment_sheet.email_type : 'link';
+            libOptions.attach_type1 = userOptions.attach_type1 = (frmData.sect_class_planning.fields.fld_assigment_sheet.email_type) ? frmData.sect_class_planning.fields.fld_assigment_sheet.email_type : 'attach';
             libOptions.sourceFile1 = userOptions.sourceFile1 = firebaseFilename;
             libOptions.destFile1 = userOptions.destFile1 = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
             classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_assigment_sheet.label + " file name</strong><br>\n" + libOptions.destFile1 + "<br>\n";
-            data['field_1543'] = firebaseFilename;
+            data['field_1543'] = libOptions.destFile1;  //since this file upload is an attachment, use the actual file name uploaded in LibInsight
         }
     }
     if (frmData.sect_class_planning.fields.fld_who_have_you_consulted_with.value) {
@@ -872,7 +878,7 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
     userOptions.to = frmData.sect_instructor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText;
     userOptions.text = stripHtml(patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestLibraryClassDatasetApi, data);
     }
@@ -948,11 +954,11 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0)) {
             const firebaseFilename = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids[0] : '';
             if (firebaseFilename !== "") {
-                libOptions.attach_type = userOptions.attach_type = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type : 'link';
+                libOptions.attach_type = userOptions.attach_type = (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type) ? frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.email_type : 'attach';
                 libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
                 libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
                 courseInfo += "<strong>" + frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
-                data['field_941'] = firebaseFilename;
+                data['field_941'] = firebaseFilename; // since this file is saved and linked to, use the firebase filename in LibInsight
             }
         }
         courseInfo += "</p><br>\n";
@@ -1861,6 +1867,14 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
             if (requestEmailOptions.sourceFile !== "" && requestEmailOptions.attach_type === 'attach') {
                 try {
                     deleteFirebaseFile(requestEmailOptions.sourceFile);
+                }
+                catch (error) {
+                    return error;
+                }
+            }
+            if (requestEmailOptions.sourceFile1 !== "" && requestEmailOptions.attach_type1 === 'attach') {
+                try {
+                    deleteFirebaseFile(requestEmailOptions.sourceFile1);
                 }
                 catch (error) {
                     return error;
