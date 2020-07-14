@@ -46,7 +46,10 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         html: '',
         attach_type: 'attach',
         sourceFile: '',
-        destFile: ''
+        destFile: '',
+        attach_type1: 'attach',
+        sourceFile1: '',
+        destFile1: ''
     };
     let patronOptions = {
         secret: emailSecret,
@@ -59,7 +62,10 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         html: '',
         attach_type: 'attach',
         sourceFile: '',
-        destFile: ''
+        destFile: '',
+        attach_type1: 'attach',
+        sourceFile1: '',
+        destFile1: ''
     };
 
     // Identify the request type and process...
@@ -843,7 +849,7 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
             libOptions.attach_type1 = userOptions.attach_type1 = (frmData.sect_class_planning.fields.fld_assigment_sheet.email_type) ? frmData.sect_class_planning.fields.fld_assigment_sheet.email_type : 'link';
             libOptions.sourceFile1 = userOptions.sourceFile1 = firebaseFilename;
             libOptions.destFile1 = userOptions.destFile1 = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
-            classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_assigment_sheet.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
+            classPlanInfo += "<strong>" + frmData.sect_class_planning.fields.fld_assigment_sheet.label + " file name</strong><br>\n" + libOptions.destFile1 + "<br>\n";
             data['field_1543'] = firebaseFilename;
         }
     }
