@@ -801,8 +801,8 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
         }
         scheduleInfo += "<p><strong>Sessions requested</strong><br>\n" + numSessions + "<br>\n</p>";
         data['field_1551'] = numSessions;
-        for (let i=0; i < frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data.length; i++) {
-            const session = frmData.sect_scheduling_information.fields.fld_session_date_time_preferences.value.data[i];
+        for (let i=0; i < frmData.sect_scheduling_information.fields.fld_preferred_dates_for_sessions.value.data.length; i++) {
+            const session = frmData.sect_scheduling_information.fields.fld_preferred_dates_for_sessions.value.data[i];
             if (session.show) {
                 const sessionText = sessionLengthAndChoicesToString(session);
                 scheduleInfo += sessionText + "<hr>";
