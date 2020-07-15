@@ -867,14 +867,14 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
 
     libOptions.from = frmData.sect_instructor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_instructor_information.fields.fld_email_address.value;
-    libOptions.to = 'jkelly@virginia.edu'; //'libraryinstruction@virginia.edu';
-    libOptions.subject = 'Library Class Request';
+    libOptions.to = 'libraryinstruction@virginia.edu';
+    libOptions.subject = 'Library Class Request: '+frmData.sect_instructor_information.fields.fld_name.value;
     libOptions.html = adminMsg + patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText);
 
     // Prepare email confirmation content for patron
     userOptions.from = '"Teaching and Learning Instruction" <libraryinstruction@virginia.edu>';
-    userOptions.subject = 'Library Class Request';
+    userOptions.subject = libOptions.subject;
     userOptions.to = frmData.sect_instructor_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText;
     userOptions.text = stripHtml(patronMsg + instructorInfo + courseInfo + scheduleInfo + classPlanInfo + reqText);
