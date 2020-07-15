@@ -1863,24 +1863,15 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
             if (result.response) {
                 console.log(`LibInsight data saved for ${reqId}: `+body);
             }
+            const deleteFiles = [];
             // Emails successfully sent, delete uploaded file if attached to email.
             if (requestEmailOptions.sourceFile !== "" && requestEmailOptions.attach_type === 'attach') {
-                try {
-                    deleteFirebaseFile(requestEmailOptions.sourceFile);
-                }
-                catch (error) {
-                    return error;
-                }
+                deleteFiles.push(deleteFirebaseFile(requestEmailOptions.sourceFile));
             }
             if (requestEmailOptions.sourceFile1 !== "" && requestEmailOptions.attach_type1 === 'attach') {
-                try {
-                    deleteFirebaseFile(requestEmailOptions.sourceFile1);
-                }
-                catch (error) {
-                    return error;
-                }
+                deleteFiles.push(deleteFirebaseFile(requestEmailOptions.sourceFile1));
             }
-            return result.response;
+            return Promise.all(deleteFiles);
         } else {
             console.log(`Bad response from ${apiUrl}: `+body);
             throw new Error(`Bad response from ${apiUrl}: `+body);
