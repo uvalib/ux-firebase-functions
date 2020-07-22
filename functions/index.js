@@ -6,6 +6,8 @@ const nodeFetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
 const headerObj = {'Content-Type': 'application/x-www-form-urlencoded'};
+// Over 30 days old. Requests older than this will be deleted.
+const OVER_30_DAYS = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds.
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -22,6 +24,23 @@ const governmentInformationDatasetApi = functions.config().libinsighturl.governm
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
 let queryString = '';
+
+// Each time requests are added, check for requests over 30 days old and delete them.
+/* exports.deleteOldRequests = functions.database.ref('/requests/{uuId}').onWrite(async (change) => {
+    const ref = change.after.ref.parent; // reference to the parent
+    const now = Date.now();
+    const cutoff = now - OVER_30_DAYS;
+    const oldRequestsQuery = ref.orderByChild('timestamp').endAt(cutoff);
+    const snapshot = await oldRequestsQuery.once('value');
+    console.log('Deleting request over 30 days old...');
+    // create a map with all children that need to be removed
+    const updates = {};
+    snapshot.forEach(child => {
+      updates[child.key] = null;
+    });
+    // execute all updates in one go and return the result to end the function
+    return ref.update(updates);
+}); */
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
