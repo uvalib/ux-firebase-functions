@@ -329,14 +329,14 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         // Build course information output section and set appropriate LibInsight fields.
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
             courseInfo += "\n<h3>" + frmData.sect_course_information.title + "</h3>\n\n<p>";
-            if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
+/*            if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.label + ":</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
                 data['field_655'] = frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value;
             }
             if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.label + ":</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
                 data['field_708'] = frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value;
-            }
+            }*/
             if (frmData.sect_course_information.fields.fld_course_section_selector.value) {
                 if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
                     courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
