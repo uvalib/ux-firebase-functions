@@ -5,9 +5,14 @@ const bucket = storage.bucket('uvalib-api.appspot.com');
 const nodeFetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
+const { ref } = require('firebase-functions/lib/providers/database');
 const headerObj = {'Content-Type': 'application/x-www-form-urlencoded'};
+// Form file upload location
+const PREFIX_FILE_UPLOAD = 'form_file_uploads/';
 // Over 30 days old. Requests older than this will be deleted.
 const OVER_30_DAYS = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds.
+// Over 6 months old. Requests older than this will be deleted.
+const OVER_6_MONTHS = 6 * 30 * 24 * 60 * 60 * 1000; // 6 months in milliseconds.
 
 // Environment variables configured for use with sending emails and saving data to LibInsight for forms.
 // See https://firebase.google.com/docs/functions/config-env
@@ -26,13 +31,13 @@ const governmentInformationDatasetApi = functions.config().libinsighturl.governm
 let queryString = '';
 
 // Each time requests are added, check for requests over 30 days old and delete them.
-/* exports.deleteOldRequests = functions.database.ref('/requests/{uuId}').onWrite(async (change) => {
-    const ref = change.after.ref.parent; // reference to the parent
+ exports.deleteOldRequests = functions.database.ref('/requests/{requestId}').onWrite(async (change) => {
+    console.log('Deleting request over 6 months old...');
+    const reqs = change.after.ref.parent; // reference to the requests path
     const now = Date.now();
-    const cutoff = now - OVER_30_DAYS;
-    const oldRequestsQuery = ref.orderByChild('timestamp').endAt(cutoff);
-    const snapshot = await oldRequestsQuery.once('value');
-    console.log('Deleting request over 30 days old...');
+    const cutoff = now - OVER_6_MONTHS;
+    const oldReqsQuery = reqs.where('timestamp', '<', cutoff).orderByChild('timestamp').limit(100);
+    const snapshot = await oldReqsQuery.once('value');
     // create a map with all children that need to be removed
     const updates = {};
     snapshot.forEach(child => {
@@ -40,7 +45,42 @@ let queryString = '';
     });
     // execute all updates in one go and return the result to end the function
     return ref.update(updates);
-}); */
+}); 
+
+// Clean up form request file uploads once a day.
+exports.fileUploadCleanup = functions.pubsub.schedule('every day 7:00').timeZone('America/New_York').onRun(async context => {
+    console.log('File upload cleanup runs daily at 7am.');
+    const options = { prefix: PREFIX_FILE_UPLOAD };
+    const now = Date.now();
+    const over6MonthsOld = now - OVER_6_MONTHS;
+    // Get files in the bucket, filtered by form file upload location
+    const [files] = await bucket.getFiles(options);
+    files.forEach(file => {
+        if (file.name !== PREFIX_FILE_UPLOAD) {
+            console.log(file.name);
+            file.getMetadata().
+            then(metadata => {
+                console.log(metadata.timeCreated);
+                let fileCreated = 1234567890; //Date.parse(metadata.timeCreated);
+                if (fileCreated < over6MonthsOld) {
+                    return true;
+                } else {
+                    return false;
+                }
+            })
+            .then(removeFile => {
+                if (removeFile) {
+                    console.log('Delete '+file.name);
+                }
+                return removeFile;
+            })
+            .catch(error => {
+                  console.log(error);
+            });
+        }
+    });
+    //const file = bucket.file('form_file_uploads/');
+});
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
@@ -138,7 +178,7 @@ function convTime24to12(time) {
 }
 
 async function deleteFirebaseFile(sourceFile) {
-    let file = bucket.file('form_file_uploads/'+sourceFile);
+    let file = bucket.file(PREFIX_FILE_UPLOAD + sourceFile);
     return await file.delete((error,response) => {
         if (error) {
             console.log(`Error deleting storage of ${sourceFile}: `+error.toString());
@@ -233,7 +273,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     libraryLocation = (frmData.fld_format.value === "Music Score") ? "Music" : libraryLocation;
     adminMsg += "<strong>Fund code:</strong> " + fundCode + "<br>\n";
     adminMsg += "<strong>Library location:</strong> " + libraryLocation + "<br>\n";
-    if (frmData.fld_is_this_for_course_reserves_.value) {
+/*    if (frmData.fld_is_this_for_course_reserves_.value) {
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
             if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
                 adminMsg += "<strong>Library reserve hold location:</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
@@ -242,7 +282,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                 adminMsg += "<strong>Library reserve loan period:</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
             }
         }
-    }
+    }*/
 
     if (frmData.fld_format.value) {
         msg = "<strong>" + frmData.fld_format.label + ":</strong> " + frmData.fld_format.value + "<br>\n";
@@ -258,14 +298,14 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         patronMsg += msg;
         data['field_683'] = (frmData.sect_bibliographic_information.fields.fld_electronic_version_preferred_when_available_.value === 1) ? 'Yes' : 'No';
     }
-    if (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value) {
+/*    if (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value) {
         msg = "<strong>" + frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.label + ":</strong> ";
         msg += (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value === 1) ? 'Yes' : 'No';
         msg += "<br>\n";
         adminMsg += msg;
         patronMsg += msg;
         data['field_793'] = (frmData.sect_bibliographic_information.fields.fld_if_ebook_not_available_order_print_version.value === 1) ? 'Yes' : 'No';
-    }
+    }*/
     if (frmData.fld_which_type_of_request_is_this_.value) {
         // This type of request input is only appropriate to book/ebook format emails.
         if ((frmData.fld_format.value === 'Book') || (frmData.fld_format.value === 'eBook')) {
