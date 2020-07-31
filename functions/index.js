@@ -48,8 +48,8 @@ let queryString = '';
 });*/ 
 
 // Clean up form request file uploads once a day.
-exports.fileUploadCleanup = functions.pubsub.schedule('every day 17:30').timeZone('America/New_York').onRun(async context => {
-    console.log('File upload cleanup runs daily at 5:30pm.');
+exports.fileUploadCleanup = functions.pubsub.schedule('every day 7:30').timeZone('America/New_York').onRun(async context => {
+    console.log('File upload cleanup runs daily at 7:30am.');
     const options = { prefix: PREFIX_FILE_UPLOAD };
     const now = Date.now();
     const over6MonthsOld = now - OVER_6_MONTHS;
@@ -57,12 +57,12 @@ exports.fileUploadCleanup = functions.pubsub.schedule('every day 17:30').timeZon
     const [files] = await bucket.getFiles(options);
     files.forEach(file => {
         if (file.name !== PREFIX_FILE_UPLOAD) {
-            const f = bucket.file(PREFIX_FILE_UPLOAD+file.name);
+            const f = bucket.file(file.name);
             console.log(f.name);
             f.getMetadata().
             then(metadata => {
                 console.log(metadata.timeCreated);
-                let fileCreated = 1234567890; //Date.parse(metadata.timeCreated);
+                let fileCreated = Date.parse(metadata.timeCreated);
                 if (fileCreated < over6MonthsOld) {
                     return true;
                 } else {
