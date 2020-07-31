@@ -31,7 +31,7 @@ const governmentInformationDatasetApi = functions.config().libinsighturl.governm
 let queryString = '';
 
 // Each time requests are added, check for requests over 30 days old and delete them.
- exports.deleteOldRequests = functions.database.ref('/requests/{requestId}').onWrite(async (change) => {
+/* exports.deleteOldRequests = functions.database.ref('/requests/{requestId}').onWrite(async (change) => {
     console.log('Deleting request over 6 months old...');
     const reqs = change.after.ref.parent; // reference to the requests path
     const now = Date.now();
@@ -45,11 +45,11 @@ let queryString = '';
     });
     // execute all updates in one go and return the result to end the function
     return ref.update(updates);
-}); 
+});*/ 
 
 // Clean up form request file uploads once a day.
-exports.fileUploadCleanup = functions.pubsub.schedule('every day 7:00').timeZone('America/New_York').onRun(async context => {
-    console.log('File upload cleanup runs daily at 7am.');
+exports.fileUploadCleanup = functions.pubsub.schedule('every day 17:30').timeZone('America/New_York').onRun(async context => {
+    console.log('File upload cleanup runs daily at 5:30pm.');
     const options = { prefix: PREFIX_FILE_UPLOAD };
     const now = Date.now();
     const over6MonthsOld = now - OVER_6_MONTHS;
@@ -57,8 +57,9 @@ exports.fileUploadCleanup = functions.pubsub.schedule('every day 7:00').timeZone
     const [files] = await bucket.getFiles(options);
     files.forEach(file => {
         if (file.name !== PREFIX_FILE_UPLOAD) {
-            console.log(file.name);
-            file.getMetadata().
+            const f = bucket.file(PREFIX_FILE_UPLOAD+file.name);
+            console.log(f.name);
+            f.getMetadata().
             then(metadata => {
                 console.log(metadata.timeCreated);
                 let fileCreated = 1234567890; //Date.parse(metadata.timeCreated);
@@ -79,7 +80,6 @@ exports.fileUploadCleanup = functions.pubsub.schedule('every day 7:00').timeZone
             });
         }
     });
-    //const file = bucket.file('form_file_uploads/');
 });
 
 // Process each form request that gets submitted.
@@ -134,7 +134,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'request_a_library_class') {
         return processLibraryClassRequest(requestId, when, formFields, libraryOptions, patronOptions);
-    } else if (formId === 'class_visits_and_instruction') {
+    } else if ((formId === 'class_visits_and_instruction') || (formId === 'class_visits_and_instruction_v2')) {
         return processSpecCollInstructionRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'personal_copy_reserve') {
         return processPersonalCopyReserveRequest(requestId, when, formFields, libraryOptions, patronOptions);
@@ -1024,6 +1024,11 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     }
     // Create session info output content and set appropriate LibInsight fields.
     sessionInfo += "\n<h3>"+frmData.sect_session_information.title+"</h3>\n\n<p>";
+
+    if (frmData.sect_session_information.fields.fld_session_format && frmData.sect_session_information.fields.fld_session_format.value) {
+        sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_session_format.label + "</strong><br>\n" + frmData.sect_session_information.fields.fld_session_format.value + "<br>\n";
+        data['field_1552'] = frmData.sect_session_information.fields.fld_session_format.value;
+    }
     if (!isObjectEmpty(frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.value)) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_what_kind_of_instruction_would_you_like.label + "</strong><br>\n";
         sessionInfo += "<ul>";
@@ -1069,6 +1074,16 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
         sessionInfo += (frmData.sect_session_information.fields.fld_are_there_specific_materials_you_would_like_to_cover_.value === 1) ? 'Yes' : 'No';
         sessionInfo += "<br>\n";
         data['field_895'] = (frmData.sect_session_information.fields.fld_are_there_specific_materials_you_would_like_to_cover_.value === 1) ? 'Yes' : 'No';
+    }
+    if (frmData.sect_session_information.fields.fld_materials_to_cover && frmData.sect_session_information.fields.fld_materials_to_cover.value && (frmData.sect_session_information.fields.fld_materials_to_cover.value.fids.length > 0)) {
+        const firebaseFilename = (frmData.sect_session_information.fields.fld_materials_to_cover.value.fids.length > 0) ? frmData.sect_session_information.fields.fld_materials_to_cover.value.fids[0] : '';
+        if (firebaseFilename !== "") {
+            libOptions.attach_type1 = userOptions.attach_type1 = (frmData.sect_session_information.fields.fld_materials_to_cover.email_type) ? frmData.sect_session_information.fields.fld_materials_to_cover.email_type : 'attach';
+            libOptions.sourceFile1 = userOptions.sourceFile1 = firebaseFilename;
+            libOptions.destFile1 = userOptions.destFile1 = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
+            sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_materials_to_cover.label + " file name</strong><br>\n" + libOptions.destFile1 + "<br>\n";
+            data['field_1553'] = firebaseFilename; // since this file is saved and linked to, use the firebase filename in LibInsight
+        }
     }
     if (frmData.sect_session_information.fields.fld_do_you_need_audiovisual_support_for_your_class_.value) {
         sessionInfo += "<strong>" + frmData.sect_session_information.fields.fld_do_you_need_audiovisual_support_for_your_class_.label + ":</strong><br>\n";
