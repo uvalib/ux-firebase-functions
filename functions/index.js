@@ -6,6 +6,7 @@ const nodeFetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
 const { ref } = require('firebase-functions/lib/providers/database');
+const { ResultStorage } = require('firebase-functions/lib/providers/testLab');
 const headerObj = {'Content-Type': 'application/x-www-form-urlencoded'};
 // Form file upload location
 const PREFIX_FILE_UPLOAD = 'form_file_uploads/';
@@ -48,39 +49,40 @@ let queryString = '';
 });*/ 
 
 // Clean up form request file uploads once a day.
-exports.fileUploadCleanup = functions.pubsub.schedule('every day 7:30').timeZone('America/New_York').onRun(async context => {
-    console.log('File upload cleanup runs daily at 7:30am.');
-    const options = { prefix: PREFIX_FILE_UPLOAD };
+exports.fileUploadCleanup = functions.pubsub.schedule('every day 4:50pm').timeZone('America/New_York').onRun(async context => {
+    console.log('File upload cleanup runs daily at ????am.');
     const now = Date.now();
     const over6MonthsOld = now - OVER_6_MONTHS;
-    // Get files in the bucket, filtered by form file upload location
-    const [files] = await bucket.getFiles(options);
-    files.forEach(file => {
-        if (file.name !== PREFIX_FILE_UPLOAD) {
-            const f = bucket.file(file.name);
-            console.log(f.name);
-            f.getMetadata().
-            then(metadata => {
-                console.log(metadata.timeCreated);
-                let fileCreated = Date.parse(metadata.timeCreated);
-                if (fileCreated < over6MonthsOld) {
-                    return true;
-                } else {
-                    return false;
-                }
-            })
-            .then(removeFile => {
-                if (removeFile) {
-                    console.log('Delete '+file.name);
-                }
-                return removeFile;
-            })
-            .catch(error => {
-                  console.log(error);
-            });
-        }
+    var filenames = await getFilesUploaded();
+    console.log(filenames.length);
+    filenames.forEach(filename => {
+        console.log(filename);
+        var file = bucket.get(filename);
+        var timeCreated = getFileTimeCreated(file);
+        console.log(timeCreated);
     });
 });
+
+function getFileTimeCreated(file) {
+    return file.getMetadata().then(metadata => {
+        return metadata.timeCreated;
+    })
+    .catch(error => {
+        console.log(error);
+    });
+}
+
+async function getFilesUploaded() {
+    const options = { prefix: PREFIX_FILE_UPLOAD };
+    const [dirContent] = await bucket.getFiles(options);
+    var files = [];
+    dirContent.forEach(file => {
+        if (file.name !== PREFIX_FILE_UPLOAD) {
+            files.push(file.name);
+        }
+    });
+    return files;
+}
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
@@ -144,6 +146,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processStaffPurchaseRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'internal_room_request') {
         return processInternalRoomRequest(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'report_library_incident') {
+        return processReportLibraryIncident(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
@@ -1842,6 +1846,150 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
     }
 }
 
+async function processReportLibraryIncident(reqId, submitted, frmData, libOptions, userOptions) {
+    let msg = incidentInfo = suspectInfo = victimInfo = '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    
+    // Prepare email message body and LibInsight data parameters
+    incidentInfo += "\n<h3>" + frmData.sect_incident.title + "</h3>\n\n<p>";
+    incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_date_and_time_of_incident.label + ":</strong> ";
+    if (frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime && frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime.length > 0) {
+        for (let i=0; i < frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime.length; i++) {
+            const choice = frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime[i];
+            let choiceStr = choiceDateTimeToString(choice);
+            incidentInfo += choiceStr;
+        }
+    }
+    if (frmData.sect_incident.fields.fld_exact_library_floor.value) {
+        incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_exact_library_floor.label + ":</strong> " + frmData.sect_incident.fields.fld_exact_library_floor.value + "<br>\n";
+    }
+    if (frmData.sect_incident.fields.fld_reported_to.value) {
+        incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_reported_to.label + ":</strong> " + frmData.sect_incident.fields.fld_reported_to.value + "<br>\n";
+    }
+    if (frmData.sect_incident.fields.fld_u_va_police_contacted.value) {
+        incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_u_va_police_contacted.label + ":</strong> " + frmData.sect_incident.fields.fld_u_va_police_contacted.value + "<br>\n";
+    }
+    if (frmData.sect_incident.fields.fld_nature_of_the_offense.value) {
+        incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_nature_of_the_offense.label + ":</strong> " + frmData.sect_incident.fields.fld_nature_of_the_offense.value + "<br>\n";
+    }
+    incidentInfo += "</p><br>\n";
+    suspectInfo += "\n<h3>" + frmData.sect_description_of_suspect.title + "</h3>\n\n<p>";
+    if (frmData.sect_description_of_suspect.fields.fld_name.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_name.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_name.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_gender.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_gender.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_gender.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_race.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_race.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_race.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_age.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_age.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_age.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_build.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_build.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_build.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_height.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_height.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_height.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_weight.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_weight.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_weight.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_skin.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_skin.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_skin.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_eyes.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_eyes.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_eyes.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_hair_color.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_hair_color.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_hair_color.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_hair_length.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_hair_length.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_hair_length.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_hair_style.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_hair_style.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_hair_style.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_facial_hair.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_facial_hair.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_facial_hair.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_suspect_may_be.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_suspect_may_be.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_suspect_may_be.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_distinguishing_features.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_distinguishing_features.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_distinguishing_features.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_voice_speech_.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_voice_speech_.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_voice_speech_.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_hat.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_hat.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_hat.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_coat_jacket_sweater.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_coat_jacket_sweater.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_coat_jacket_sweater.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_blouse_shirt.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_blouse_shirt.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_blouse_shirt.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_shoes.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_shoes.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_shoes.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_jewelry.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_jewelry.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_jewelry.value + "<br>\n";
+    }
+    if (frmData.sect_description_of_suspect.fields.fld_additional_information.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_additional_information.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_additional_information.value + "<br>\n";
+    }
+    suspectInfo += "</p><br>\n";
+    victimInfo += "\n<h3>" + frmData.sect_victim_information.title + "</h3>\n\n<p>";
+    if (frmData.sect_victim_information.fields.fld_u_va_computing_id.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_u_va_computing_id.label + ":</strong> " + frmData.sect_victim_information.fields.fld_u_va_computing_id.value + "<br>\n";
+    }
+    if (frmData.sect_victim_information.fields.fld_name.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_name.label + ":</strong> " + frmData.sect_victim_information.fields.fld_name.value + "<br>\n";
+    }
+    if (frmData.sect_victim_information.fields.fld_email_address.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_victim_information.fields.fld_email_address.value + "<br>\n";
+    }
+    if (frmData.sect_victim_information.fields.fld_phone.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_phone.label + ":</strong> " + frmData.sect_victim_information.fields.fld_phone.value + "<br>\n";
+    }
+    if (frmData.sect_victim_information.fields.fld_reporter_s_computing_id.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_reporter_s_computing_id.label + ":</strong> " + frmData.sect_victim_information.fields.fld_reporter_s_computing_id.value + "<br>\n";
+    }
+    if (frmData.sect_victim_information.fields.fld_reporter_s_name.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_reporter_s_name.label + ":</strong> " + frmData.sect_victim_information.fields.fld_reporter_s_name.value + "<br>\n";
+    }
+    if (frmData.sect_victim_information.fields.fld_reporter_email.value) {
+        victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_reporter_email.label + ":</strong> " + frmData.sect_victim_information.fields.fld_reporter_email.value + "<br>\n";
+    }
+    victimInfo += "<strong>Reported at:</strong> "+submitted;
+    victimInfo += "</p><br>\n";
+
+    // Prepare email content for Library staff
+    libOptions.from = frmData.fld_reporter_email.value;
+    libOptions.replyTo = frmData.fld_reporter_email.value;
+    libOptions.to = 'jlk4p@virginia.edu'; //'Lib-Incidents@virginia.edu
+    libOptions.subject = 'Library Incident Report';
+    libOptions.html = incidentInfo + suspectInfo + victimInfo + reqText;
+    libOptions.text = stripHtml(incidentInfo + suspectInfo + victimInfo + reqText);
+
+    // Prepare email confirmation content for patron
+    msg = "<p>A copy of the incident you reported for your records.</p><br>\n\n";
+    userOptions.to = frmData.fld_reporter_email.value;
+    userOptions.subject = 'Library incident reported by you';
+    userOptions.html = msg + incidentInfo + suspectInfo + victimInfo + reqText;
+    userOptions.text = stripHtml(msg + incidentInfo + suspectInfo + victimInfo + reqText);
+    
+    try {
+        return postEmailOnly(reqId, libOptions, userOptions);
+    }
+    catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
+}
+
 async function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
     let inputs = msg = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
@@ -1949,6 +2097,38 @@ function postEmailAndData(reqId, requestEmailOptions, confirmEmailOptions, apiUr
         } else {
             console.log(`Bad response from ${apiUrl}: `+body);
             throw new Error(`Bad response from ${apiUrl}: `+body);
+        }
+    })
+    .catch(error => function(error) {
+        console.log(`Error for request ${reqId}: `);
+        console.log(error);
+        return error;
+    });
+}
+
+function postEmailOnly(reqId, requestEmailOptions, confirmEmailOptions) {
+    queryString = paramsString(requestEmailOptions);
+    nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj })
+    .then(res => res.text())
+    .then(body => {
+        if (body && (body.search('Status: 201 Created') !== -1)) {
+            console.log(`Library request notification sent for ${reqId}: `+body);
+            queryString = paramsString(confirmEmailOptions);
+            return nodeFetch(emailUrl, { method: 'POST', body: queryString, headers: headerObj });
+        } else {
+            console.log(`Library request notification failed for ${reqId}: `+body);
+            throw new Error(`Library request notification failed for ${reqId}: `+body);
+        }
+    })
+    .then(res => res.text())
+    .then(body => {
+        if(body && (body.search('Status: 201 Created') !== -1)) {
+            console.log(`Patron confirmation notification sent for ${reqId}: `+body);
+            queryString = paramsString(formData);
+            return body;
+        } else {
+            console.log(`Patron confirmation notification failed for ${reqId}: `+body);
+            throw new Error(`Patron confirmation notification failed for ${reqId}: `+body);
         }
     })
     .catch(error => function(error) {
