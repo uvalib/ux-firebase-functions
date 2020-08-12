@@ -1968,7 +1968,7 @@ async function processReportLibraryIncident(reqId, submitted, frmData, libOption
     // Prepare email content for Library staff
     libOptions.from = frmData.sect_victim_information.fields.fld_reporter_email.value;
     libOptions.replyTo = frmData.sect_victim_information.fields.fld_reporter_email.value;
-    libOptions.to = 'jlk4p@virginia.edu'; //'Lib-Incidents@virginia.edu';
+    libOptions.to = 'Lib-Incidents@virginia.edu';
     libOptions.subject = 'Library Incident Report';
     libOptions.html = incidentInfo + suspectInfo + victimInfo + reqText;
     libOptions.text = stripHtml(incidentInfo + suspectInfo + victimInfo + reqText);
