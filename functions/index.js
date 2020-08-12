@@ -49,7 +49,7 @@ let queryString = '';
 });*/ 
 
 // Clean up form request file uploads once a day.
-exports.fileUploadCleanup = functions.pubsub.schedule('every day 4:50pm').timeZone('America/New_York').onRun(async context => {
+exports.fileUploadCleanup = functions.pubsub.schedule('every day 14:05').timeZone('America/New_York').onRun(async context => {
     console.log('File upload cleanup runs daily at ????am.');
     const now = Date.now();
     const over6MonthsOld = now - OVER_6_MONTHS;
@@ -57,19 +57,20 @@ exports.fileUploadCleanup = functions.pubsub.schedule('every day 4:50pm').timeZo
     console.log(filenames.length);
     filenames.forEach(filename => {
         console.log(filename);
-        var file = bucket.get(filename);
-        var timeCreated = getFileTimeCreated(file);
-        console.log(timeCreated);
+        var timeCreated = getFileTimeCreated(filename);
     });
 });
 
-function getFileTimeCreated(file) {
-    return file.getMetadata().then(metadata => {
-        return metadata.timeCreated;
+async function getFileTimeCreated(filename) {
+    const file = bucket.file(filename);
+    var time = await file.getMetadata().then(metadata => {
+        console.log('timeCreated: '+metadata.timeCreated);
+        return 'getFileTimeCreated return value';
     })
     .catch(error => {
         console.log(error);
     });
+    return time;
 }
 
 async function getFilesUploaded() {
@@ -1852,13 +1853,11 @@ async function processReportLibraryIncident(reqId, submitted, frmData, libOption
     
     // Prepare email message body and LibInsight data parameters
     incidentInfo += "\n<h3>" + frmData.sect_incident.title + "</h3>\n\n<p>";
-    incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_date_and_time_of_incident.label + ":</strong> ";
-    if (frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime && frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime.length > 0) {
-        for (let i=0; i < frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime.length; i++) {
-            const choice = frmData.sect_incident.fields.fld_date_and_time_of_incident.value.sessionDateTime[i];
-            let choiceStr = choiceDateTimeToString(choice);
-            incidentInfo += choiceStr;
-        }
+    console.log(frmData.sect_incident.fields.fld_date_and_time_of_incident.value);
+    if (frmData.sect_incident.fields.fld_date_and_time_of_incident.value.date && frmData.sect_incident.fields.fld_date_and_time_of_incident.value.startTime) {
+        incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_date_and_time_of_incident.label + ":</strong> ";
+        incidentInfo += convDateYMDtoMDY(frmData.sect_incident.fields.fld_date_and_time_of_incident.value.date) + " ";
+        incidentInfo += convTime24to12(frmData.sect_incident.fields.fld_date_and_time_of_incident.value.startTime) + "<br>\n";
     }
     if (frmData.sect_incident.fields.fld_exact_library_floor.value) {
         incidentInfo += "<strong>" + frmData.sect_incident.fields.fld_exact_library_floor.label + ":</strong> " + frmData.sect_incident.fields.fld_exact_library_floor.value + "<br>\n";
@@ -1874,8 +1873,8 @@ async function processReportLibraryIncident(reqId, submitted, frmData, libOption
     }
     incidentInfo += "</p><br>\n";
     suspectInfo += "\n<h3>" + frmData.sect_description_of_suspect.title + "</h3>\n\n<p>";
-    if (frmData.sect_description_of_suspect.fields.fld_name.value) {
-        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_name.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_name.value + "<br>\n";
+    if (frmData.sect_description_of_suspect.fields.fld_suspect_name.value) {
+        suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_suspect_name.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_suspect_name.value + "<br>\n";
     }
     if (frmData.sect_description_of_suspect.fields.fld_gender.value) {
         suspectInfo += "<strong>" + frmData.sect_description_of_suspect.fields.fld_gender.label + ":</strong> " + frmData.sect_description_of_suspect.fields.fld_gender.value + "<br>\n";
@@ -1963,20 +1962,20 @@ async function processReportLibraryIncident(reqId, submitted, frmData, libOption
     if (frmData.sect_victim_information.fields.fld_reporter_email.value) {
         victimInfo += "<strong>" + frmData.sect_victim_information.fields.fld_reporter_email.label + ":</strong> " + frmData.sect_victim_information.fields.fld_reporter_email.value + "<br>\n";
     }
-    victimInfo += "<strong>Reported at:</strong> "+submitted;
+    victimInfo += "<strong>Reported at:</strong> " + submitted + "<br>\n";
     victimInfo += "</p><br>\n";
 
     // Prepare email content for Library staff
-    libOptions.from = frmData.fld_reporter_email.value;
-    libOptions.replyTo = frmData.fld_reporter_email.value;
-    libOptions.to = 'jlk4p@virginia.edu'; //'Lib-Incidents@virginia.edu
+    libOptions.from = frmData.sect_victim_information.fields.fld_reporter_email.value;
+    libOptions.replyTo = frmData.sect_victim_information.fields.fld_reporter_email.value;
+    libOptions.to = 'jlk4p@virginia.edu'; //'Lib-Incidents@virginia.edu';
     libOptions.subject = 'Library Incident Report';
     libOptions.html = incidentInfo + suspectInfo + victimInfo + reqText;
     libOptions.text = stripHtml(incidentInfo + suspectInfo + victimInfo + reqText);
 
     // Prepare email confirmation content for patron
     msg = "<p>A copy of the incident you reported for your records.</p><br>\n\n";
-    userOptions.to = frmData.fld_reporter_email.value;
+    userOptions.to = frmData.sect_victim_information.fields.fld_reporter_email.value;
     userOptions.subject = 'Library incident reported by you';
     userOptions.html = msg + incidentInfo + suspectInfo + victimInfo + reqText;
     userOptions.text = stripHtml(msg + incidentInfo + suspectInfo + victimInfo + reqText);
