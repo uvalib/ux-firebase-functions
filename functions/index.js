@@ -720,6 +720,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                 }
                 switch (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value) {
                     case 'African-American and African Studies':
+                    case 'American Studies':
                     case 'Anthropology':
                     case 'Archaeology':
                     case 'Classics':
@@ -787,9 +788,6 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         }
 
     }
-    // @TODO comment out the two lines below when ready to test final routing before going live.
-    //libOptions.to = 'lib-ux-testing@virginia.edu';
-    //libOptions.bcc = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = adminMsg + biblioInfo + requestorInfo + courseInfo + reqText;
     libOptions.text = stripHtml(adminMsg + biblioInfo + requestorInfo + courseInfo + reqText);
