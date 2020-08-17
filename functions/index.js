@@ -150,7 +150,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processInternalRoomRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'report_library_incident') {
         return processReportLibraryIncident(requestId, when, formFields, libraryOptions, patronOptions);
-    } else if (formId === 'request_event_space') {
+    } else if (formId === 'request_events_space') {
         return processRequestEventSpace(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
@@ -2001,9 +2001,9 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
         contactInfo += "<strong>" + frmData.sect_contact_information.fields.fld_name.label + ":</strong> " + frmData.sect_contact_information.fields.fld_name.value + "<br>\n";
         data['field_1565'] = frmData.sect_contact_information.fields.fld_name.value;
     }
-    if (frmData.sect_contact_information.fields.fld_email_address.value) {
-        contactInfo += "<strong>" + frmData.sect_contact_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_contact_information.fields.fld_email_address.value + "<br>\n";
-        data['field_1566'] = frmData.sect_contact_information.fields.fld_email_address.value;
+    if (frmData.sect_contact_information.fields.fld_email.value) {
+        contactInfo += "<strong>" + frmData.sect_contact_information.fields.fld_email.label + ":</strong> " + frmData.sect_contact_information.fields.fld_email.value + "<br>\n";
+        data['field_1566'] = frmData.sect_contact_information.fields.fld_email.value;
     }
     if (frmData.sect_contact_information.fields.fld_phone.value) {
         contactInfo += "<strong>" + frmData.sect_contact_information.fields.fld_phone.label + ":</strong> " + frmData.sect_contact_information.fields.fld_phone.value + "<br>\n";
@@ -2041,7 +2041,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     }
     if (frmData.sect_event_information.fields.fld_do_you_have_a_copy.value && (frmData.sect_event_information.fields.fld_do_you_have_a_copy.value === 'Yes')) {
         if (frmData.sect_event_information.fields.fld_program_url.value) {
-            eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_program_url.label + ":</strong> " + frmData.sect_event_information.fields.fld_program_url.value + "<br>\n";
+            eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_program_url.label + ":</strong> " + frmData.sect_event_information.fields.fld_program_url.value + "<br>\n";
             data['field_1575'] = frmData.sect_event_information.fields.fld_program_url.value;
         }
     }
@@ -2052,74 +2052,74 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
                 libOptions.attach_type = userOptions.attach_type = (frmData.sect_event_information.fields.fld_attach_program.email_type) ? frmData.sect_event_information.fields.fld_attach_program.email_type : 'attach';
                 libOptions.sourceFile = userOptions.sourceFile = firebaseFilename;
                 libOptions.destFile = userOptions.destFile = firebaseFilename.substring(firebaseFilename.indexOf('_')+1);
-                eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_attach_program.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
+                eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_attach_program.label + " file name</strong><br>\n" + libOptions.destFile + "<br>\n";
                 data['field_1576'] = firebaseFilename; // since this file is saved and linked to, use the firebase filename in LibInsight
             }
         }
     }
     if (frmData.sect_event_information.fields.fld_expected_number_of_attendees.value) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_expected_number_of_attendees.label + ":</strong> " + frmData.sect_event_information.fields.fld_expected_number_of_attendees.value + "<br>\n";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_expected_number_of_attendees.label + ":</strong> " + frmData.sect_event_information.fields.fld_expected_number_of_attendees.value + "<br>\n";
         data['field_1577'] = frmData.sect_event_information.fields.fld_expected_number_of_attendees.value;
     }
     if (!isObjectEmpty(frmData.sect_event_information.fields.fld_target_audience.value)) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_target_audience.label + "</strong><br>\n";
-        eventsInfo += "<ul>";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_target_audience.label + "</strong><br>\n";
+        eventInfo += "<ul>";
         for (let key in frmData.sect_event_information.fields.fld_target_audience.value) {
-            eventsInfo += "<li>" + frmData.sect_event_information.fields.fld_target_audience.value[key] + "</li>\n";
+            eventInfo += "<li>" + frmData.sect_event_information.fields.fld_target_audience.value[key] + "</li>\n";
         }
-        eventsInfo += "</ul><br>\n";
+        eventInfo += "</ul><br>\n";
         data['field_1578'] = Object.keys(frmData.sect_event_information.fields.fld_target_audience.value).join(', ');
     }
     if (frmData.sect_event_information.fields.fld_are_you_expecting_minors.value) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_are_you_expecting_minors.label + ":</strong> " + frmData.sect_event_information.fields.fld_are_you_expecting_minors.value + "<br>\n";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_are_you_expecting_minors.label + ":</strong> " + frmData.sect_event_information.fields.fld_are_you_expecting_minors.value + "<br>\n";
         data['field_1579'] = frmData.sect_event_information.fields.fld_are_you_expecting_minors.value;
     }
     if (frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime && frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime.length > 0) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_preferred_date_of_event.label + ":</strong><br>\n"; 
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_preferred_date_of_event.label + ":</strong><br>\n"; 
         let preferredDate = '';
         for (let i=0; i < frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime.length; i++) {
             const choice = frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime[i];
             let choiceStr = choiceDateTimeToString(choice);
-            eventsInfo += choiceStr;
+            eventInfo += choiceStr;
             preferredDate += choiceStr;
         }
         data['field_1580'] = stripHtml(preferredDate);
     }
     if (!isObjectEmpty(frmData.sect_event_information.fields.fld_auditorium_a_v_needs.value)) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_auditorium_a_v_needs.label + "</strong><br>\n";
-        eventsInfo += "<ul>";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_auditorium_a_v_needs.label + "</strong><br>\n";
+        eventInfo += "<ul>";
         for (let key in frmData.sect_event_information.fields.fld_auditorium_a_v_needs.value) {
-            eventsInfo += "<li>" + frmData.sect_event_information.fields.fld_auditorium_a_v_needs.value[key] + "</li>\n";
+            eventInfo += "<li>" + frmData.sect_event_information.fields.fld_auditorium_a_v_needs.value[key] + "</li>\n";
         }
-        eventsInfo += "</ul><br>\n";
+        eventInfo += "</ul><br>\n";
         data['field_1582'] = Object.keys(frmData.sect_event_information.fields.fld_auditorium_a_v_needs.value).join(', ');
     }
     if (frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.value) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.label + ":</strong> " + frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.value + "<br>\n";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.label + ":</strong> " + frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.value + "<br>\n";
         data['field_1583'] = frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.value;
         if (frmData.sect_event_information.fields.fld_auditorium_requested_room_layout.value === 'Other...') {
             if (frmData.sect_event_information.fields.fld_other_room_layout_description.value) {
-                eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_other_room_layout_description.label + ":</strong> " + frmData.sect_event_information.fields.fld_other_room_layout_description.value + "<br>\n";
+                eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_other_room_layout_description.label + ":</strong> " + frmData.sect_event_information.fields.fld_other_room_layout_description.value + "<br>\n";
                 data['field_1584'] = frmData.sect_event_information.fields.fld_other_room_layout_description.value;
             }
         }
     }
     if (frmData.sect_event_information.fields.fld_catering_food.value) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_catering_food.label + ":</strong> " + frmData.sect_event_information.fields.fld_catering_food.value + "<br>\n";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_catering_food.label + ":</strong> " + frmData.sect_event_information.fields.fld_catering_food.value + "<br>\n";
         data['field_1585'] = frmData.sect_event_information.fields.fld_catering_food.value;
         if (frmData.sect_event_information.fields.fld_catering_food.value !== 'No catering/food') {
             if (frmData.sect_event_information.fields.fld_name_of_caterer.value) {
-                eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_name_of_caterer.label + ":</strong> " + frmData.sect_event_information.fields.fld_name_of_caterer.value + "<br>\n";
+                eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_name_of_caterer.label + ":</strong> " + frmData.sect_event_information.fields.fld_name_of_caterer.value + "<br>\n";
                 data['field_1586'] = frmData.sect_event_information.fields.fld_name_of_caterer.value;
             }
         }
     }
     if (frmData.sect_event_information.fields.fld_payment_method.value) {
-        eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_payment_method.label + ":</strong> " + frmData.sect_event_information.fields.fld_payment_method.value + "<br>\n";
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_payment_method.label + ":</strong> " + frmData.sect_event_information.fields.fld_payment_method.value + "<br>\n";
         data['field_1587'] = frmData.sect_event_information.fields.fld_payment_method.value;
         if (frmData.sect_event_information.fields.fld_payment_method.value === 'PTAO') {
             if (frmData.sect_event_information.fields.fld_ptao.value) {
-                eventsInfo += "<strong>" + frmData.sect_event_information.fields.fld_ptao.label + ":</strong> " + frmData.sect_event_information.fields.fld_ptao.value + "<br>\n";
+                eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_ptao.label + ":</strong> " + frmData.sect_event_information.fields.fld_ptao.value + "<br>\n";
                 data['field_1588'] = frmData.sect_event_information.fields.fld_ptao.value;
             }
         }
@@ -2127,7 +2127,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     eventInfo += "</p><br>\n";
 
     if (frmData.fld_additional_information.value) {
-        inputs += "<br>\n<strong>" + frmData.fld_additional_information.title + "</strong>" + frmData.fld_additional_information.value + "</p><br>\n";
+        inputs += "<br>\n<strong>" + frmData.fld_additional_information.label + "</strong>" + frmData.fld_additional_information.value + "</p><br>\n";
         data['field_1589'] = frmData.fld_additional_information.value;
     }
     if (frmData.fld_event_space.value) {
@@ -2137,8 +2137,8 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     msg += "<br>\nBelow is a new event space request.</p><br>\n\n";
 
     // Prepare email content for Library staff
-    libOptions.from = frmData.sect_contact_information.fields.fld_email_address.value;
-    libOptions.replyTo = frmData.sect_contact_information.fields.fld_email_address.value;
+    libOptions.from = frmData.sect_contact_information.fields.fld_email.value;
+    libOptions.replyTo = frmData.sect_contact_information.fields.fld_email.value;
     // @TODO Routing goes to Events team in production.
     libOptions.to = 'jlk4p@virginia.edu'; //'jmf6a@virginia.edu,mhm8m@virginia.edu,dlg7y@virginia.edu';
     libOptions.subject = 'Harrison Event Space Request';
@@ -2147,9 +2147,9 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
 
     // Prepare email confirmation content for patron
     msg = "<p>Your request has been submitted.  Please allow two business days for a response regarding availability and the status of your request.</p><br>\n\n";
-    userOptions.from = '"U.Va. Harrison Institute" <libevents@virginia.edu>';
-    userOptions.replyTo = '"U.Va. Harrison Institute" <libevents@virginia.edu>';
-    userOptions.to = frmData.sect_contact_information.fields.fld_email_address.value;
+    userOptions.from = '"UVA Harrison Institute" <libevents@virginia.edu>';
+    userOptions.replyTo = '"UVA Harrison Institute" <libevents@virginia.edu>';
+    userOptions.to = frmData.sect_contact_information.fields.fld_email.value;
     userOptions.subject = 'Harrison Event Space Request';
     userOptions.html = msg + contactInfo + eventInfo + inputs + reqText;
     userOptions.text = stripHtml(msg + contactInfo + eventInfo + inputs + reqText);
