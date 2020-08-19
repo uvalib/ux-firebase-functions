@@ -27,6 +27,9 @@ const personalCopyReserveDatasetApi = functions.config().libinsighturl.personalc
 const researchTutorialRequestDatasetApi = functions.config().libinsighturl.researchtutorial;
 const requestLibraryClassDatasetApi = functions.config().libinsighturl.libraryclass;
 const requestEventSpaceDatasetApi = functions.config().libinsighturl.eventspacerequest;
+const requestVideoClipsDatasetApi = functions.config().libinsighturl.videocliprequest;
+const requestMediaClassroomDatasetApi = functions.config().libinsighturl.mediaclassroomrequest;
+const requestZoomRoomDatasetApi = functions.config().libinsighturl.zoomroomrequest;
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
@@ -56,15 +59,16 @@ exports.fileUploadCleanup = functions.pubsub.schedule('every day 14:05').timeZon
     const over6MonthsOld = now - OVER_6_MONTHS;
     var filenames = await getFilesUploaded();
     console.log(filenames.length);
-    filenames.forEach(filename => {
+/*    filenames.forEach(filename => {
         console.log(filename);
         var timeCreated = getFileTimeCreated(filename);
-    });
+    });*/
 });
 
 async function getFileTimeCreated(filename) {
     const file = bucket.file(filename);
     var time = await file.getMetadata().then(metadata => {
+        // metadata value is undefined. Log also indicates this runs asynchronously causing issue
         console.log('timeCreated: '+metadata.timeCreated);
         return 'getFileTimeCreated return value';
     })
@@ -152,6 +156,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processReportLibraryIncident(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'request_events_space') {
         return processRequestEventSpace(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'oom_room_request') {
+        return processRequestZoomRoom(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
@@ -2156,6 +2162,198 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestEventSpaceDatasetApi, data);
+    }
+    catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
+}
+
+async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, userOptions) {
+    let requestorInfo = meetingInfo = courseInfo = reservationInfo = roomInfo = commentInfo = msg = inputs= '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    let data = { 'field_1623': reqId, 'ts_start': submitted };
+    
+    if (frmData.fld_is_this_request_for_a_course_or_a_meeting.value) {
+        inputs += "<p><strong>" + frmData.fld_is_this_request_for_a_course_or_a_meeting.label + "</strong>" + frmData.fld_is_this_request_for_a_course_or_a_meeting.value + "</p><br>\n";
+        data['field_1600'] = frmData.fld_is_this_request_for_a_course_or_a_meeting.value;
+    }
+    if (frmData.fld_is_this_request_for_a_course_or_a_meeting.value && frmData.fld_is_this_request_for_a_course_or_a_meeting.value === 'Meeting') {
+        meetingInfo += "\n<h3>" + frmData.sect_meeting_information.title + "</h3>\n\n<p>";
+        if (frmData.sect_meeting_information.fields.fld_meeting_title.value) {
+            meetingInfo += "<strong>" + frmData.sect_meeting_information.fields.fld_meeting_title.label + "</strong>" + frmData.sect_meeting_information.fields.fld_meeting_title.value + "<br>\n";
+            data['field_1601'] = frmData.sect_meeting_information.fields.fld_meeting_title.value;
+        }
+        if (frmData.sect_meeting_information.fields.fld_meeting_description.value) {
+            meetingInfo += "<strong>" + frmData.sect_meeting_information.fields.fld_meeting_description.label + "</strong>" + frmData.sect_meeting_information.fields.fld_meeting_description.value + "<br>\n";
+            data['field_1602'] = frmData.sect_meeting_information.fields.fld_meeting_description.value;
+        }
+        meetingInfo += "</p><br>\n";
+    }
+    if (frmData.fld_is_this_request_for_a_course_or_a_meeting.value && frmData.fld_is_this_request_for_a_course_or_a_meeting.value === 'Course') {
+        courseInfo += "\n<h3>" + frmData.sect_course_information.title + "</h3>\n\n<p>";
+        if (frmData.sect_course_information.fields.fld_course_section_selector.value) {
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
+                courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
+                data['field_1603'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
+            }
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
+                courseInfo += "<strong>Course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
+                data['field_1604'] = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
+                courseNum = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
+            }
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value.section) {
+                courseInfo += "<strong>Section:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.section + "<br>\n";
+                data['field_1605'] = frmData.sect_course_information.fields.fld_course_section_selector.value.section;
+            }
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value.title) {
+                courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.title + "<br>\n";
+                data['field_1606'] = frmData.sect_course_information.fields.fld_course_section_selector.value.title;
+            }
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime) {
+                courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime + "<br>\n";
+                data['field_1607'] = frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime;
+            }
+            if (frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment) {
+                courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment + "<br>\n";
+                data['field_1608'] = frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment;
+            }
+        }
+        courseInfo += "</p><br>\n";
+    }
+    reservationInfo += "\n<h3>"+frmData.sect_reservation_dates_times.title+"</h3>\n\n";
+    if (frmData.sect_reservation_dates_times.fields.fld_preferred_dates.value.data && frmData.sect_reservation_dates_times.fields.fld_preferred_dates.value.data.length > 0) {
+        for (let i=0; i < frmData.sect_reservation_dates_times.fields.fld_preferred_dates.value.data.length; i++) {
+            const session = frmData.sect_reservation_dates_times.fields.fld_preferred_dates.value.data[i];
+            if (session.show) {
+                const sessionText = sessionLengthAndChoicesToString(session);
+                reservationInfo += sessionText + "<hr>";
+                if (session.nth === 1) {
+                    data['field_1609'] = stripHtml(sessionText);
+                } else if (session.nth === 2) {
+                    data['field_1610'] = stripHtml(sessionText);
+                } else {
+                    data['field_1611'] = stripHtml(sessionText);
+                }
+            }
+        }
+    }
+    reservationInfo += "<br>\n";
+    roomInfo += "\n<h3>"+frmData.sect_room_usage.title+"</h3>\n\n";
+    if (frmData.sect_room_usage.fields.fld_location_room.value) {
+        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_location_room.label + "</strong>" + frmData.sect_room_usage.fields.fld_location_room.value + "<br>\n";
+        data['field_1612'] = frmData.sect_room_usage.fields.fld_location_room.value;
+    }
+    if (frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value) {
+        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.label + "</strong>" + frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value + "<br>\n";
+        data['field_1613'] = frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value;
+    }
+    if (frmData.sect_room_usage.fields.fld_number_of_attendees.value) {
+        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_number_of_attendees.label + "</strong>" + frmData.sect_room_usage.fields.fld_number_of_attendees.value + "<br>\n";
+        data['field_1614'] = frmData.sect_room_usage.fields.fld_number_of_attendees.value;
+    }
+    if (frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value && frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value === 'Yes') {
+        if (!isObjectEmpty(frmData.sect_room_usage.fields.fld_who_is_participating.value)) {
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_who_is_participating.label + "</strong><br>\n";
+            roomInfo += "<ul>";
+            for (let key in frmData.sect_room_usage.fields.fld_who_is_participating.value) {
+                roomInfo += "<li>" + frmData.sect_room_usage.fields.fld_who_is_participating.value[key] + "</li>\n";
+            }
+            roomInfo += "</ul><br>\n";
+            data['field_1615'] = Object.keys(frmData.sect_room_usage.fields.fld_who_is_participating.value).join(', ');
+            if (frmData.sect_room_usage.fields.fld_who_is_participating.value.hasOwnProperty("Other...")) {
+                roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_other_participants.label + "</strong><br>\n" + frmData.sect_room_usage.fields.fld_other_participants.value + "<br>\n";
+                data['field_1616'] = frmData.sect_room_usage.fields.fld_other_participants.value;
+            }
+        }
+        if (frmData.sect_room_usage.fields.fld_who_is_hosting_this.value) {
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_who_is_hosting_this.label + "</strong>" + frmData.sect_room_usage.fields.fld_who_is_hosting_this.value + "<br>\n";
+            data['field_1617'] = frmData.sect_room_usage.fields.fld_who_is_hosting_this.value;
+        }
+        if (frmData.sect_room_usage.fields.fld_who_is_hosting_this.value === 'Other...') {
+            if (frmData.sect_room_usage.fields.fld_other_institution_hosting.value) {
+                roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_other_institution_hosting.label + "</strong>" + frmData.sect_room_usage.fields.fld_other_institution_hosting.value + "<br>\n";
+                data['field_1618'] = frmData.sect_room_usage.fields.fld_other_institution_hosting.value;
+            }
+        }
+        if (frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value) {
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.label + "</strong>" + frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value + "<br>\n";
+            data['field_1619'] = frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value;
+        }
+        if (frmData.sect_room_usage.fields.fld_pre_event_access_needs.value) {
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_pre_event_access_needs.label + "</strong>" + frmData.sect_room_usage.fields.fld_pre_event_access_needs.value + "<br>\n";
+            data['field_1620'] = frmData.sect_room_usage.fields.fld_pre_event_access_needs.value;
+        }
+        if (frmData.sect_room_usage.fields.fld_post_event_access_needs.value) {
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_post_event_access_needs.label + "</strong>" + frmData.sect_room_usage.fields.fld_post_event_access_needs.value + "<br>\n";
+            data['field_1621'] = frmData.sect_room_usage.fields.fld_post_event_access_needs.value;
+        }            
+    }
+    roomInfo += "<br>\n";
+    commentInfo += "\n<h3>" + frmData.sect_comments.title + "</h3>\n\n<p>";
+    if (frmData.sect_comments.fields.fld_provide_any_additional_information.value) {
+        commentInfo += "<strong>" + frmData.sect_comments.fields.fld_provide_any_additional_information.label + "</strong>" + frmData.sect_comments.fields.fld_provide_any_additional_information.value + "<br>\n";
+        data['field_1622'] = frmData.sect_comments.fields.fld_provide_any_additional_information.value;
+    }
+    commentInfo += "</p><br>\n";
+    requestorInfo += "\n<h3>" + frmData.sect_requestor_information.title + "</h3>\n\n<p>";
+    if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + "</strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
+        data['field_1593'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_name.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + "</strong>" + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
+        data['field_1594'] = frmData.sect_requestor_information.fields.fld_name.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_email_address.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + "</strong>" + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
+        data['field_1595'] = frmData.sect_requestor_information.fields.fld_email_address.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_phone_number.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_phone_number.label + "</strong>" + frmData.sect_requestor_information.fields.fld_phone_number.value + "<br>\n";
+        data['field_1596'] = frmData.sect_requestor_information.fields.fld_phone_number.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_university_affiliation.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.label + "</strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.value + "<br>\n";
+        data['field_1597'] = frmData.sect_requestor_information.fields.fld_university_affiliation.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + "</strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
+        data['field_1598'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
+        if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value === 'Other...') {
+            if (frmData.sect_requestor_information.fields.fld_other_department_or_school.value) {
+                requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.label + "</strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.value + "<br>\n";
+                data['field_1599'] = frmData.sect_requestor_information.fields.fld_other_department_or_school.value;
+            }
+        }
+    }
+    requestorInfo += "</p><br>\n";
+
+    // Prepare email content for Library staff
+    msg = "<p>The request below was submitted through the Library Zoom Room Request form:</p><br>\n\n";
+    libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
+    libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
+    // @TODO Routing goes to cradmin@virginia.edu,libevents@virginia.edu in production
+    libOptions.to = 'jlk4p@virginia.edu'; // 'cradmin@virginia.edu,libevents@virginia.edu';
+    libOptions.subject = 'Zoom Room reservation request';
+    libOptions.html = msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText;
+    libOptions.text = stripHtml(msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText);
+
+    // Prepare email confirmation content for patron
+    msg = "<p>We have received your Zoom Room reservation request. A Library staff member will reply within 48 hours ";
+    msg += "(during normal business hours, i.e. Monday through Friday 8:00 a.m. to 5:00 p.m.). If you do not hear from ";
+    msg += "a staff member by that time, please contact the room booking coordinator, Stephanie Crooks, at 243-8788 or ";
+    msg += "sac3m@virginia.edu..</p><br>\n\n";
+    msg += "<p>Below is a copy of what you submitted.</p><br>\n\n";
+    userOptions.from = '"UVA Library Events Team" <libevents@virginia.edu>';
+    userOptions.replyTo = '"UVA Library Events Team" <libevents@virginia.edu>';
+    userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
+    userOptions.subject = 'Your Zoom Room reservation request';
+    userOptions.html = msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText;
+    userOptions.text = stripHtml(msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText);
+    
+    try {
+        return postEmailAndData(reqId, libOptions, userOptions, requestZoomRoomDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
