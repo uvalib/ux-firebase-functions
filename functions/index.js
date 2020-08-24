@@ -2335,8 +2335,7 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
     msg = "<p>The request below was submitted through the Library Zoom Room Request form:</p><br>\n\n";
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
-    // @TODO Routing goes to cradmin@virginia.edu,libevents@virginia.edu in production
-    libOptions.to = 'jlk4p@virginia.edu'; // 'cradmin@virginia.edu,libevents@virginia.edu';
+    libOptions.to = 'cradmin@virginia.edu,libevents@virginia.edu';
     libOptions.subject = 'Zoom Room reservation request';
     libOptions.html = msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText;
     libOptions.text = stripHtml(msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText);
