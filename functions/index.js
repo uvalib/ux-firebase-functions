@@ -158,8 +158,6 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processRequestEventSpace(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'zoom_room_request') {
         return processRequestZoomRoom(requestId, when, formFields, libraryOptions, patronOptions);
-    } else if (formId === 'government_information_contact_u') {
-        return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
     }
@@ -2179,17 +2177,17 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
     let data = { 'field_1623': reqId, 'ts_start': submitted };
     
     if (frmData.fld_is_this_request_for_a_course_or_a_meeting.value) {
-        inputs += "<p><strong>" + frmData.fld_is_this_request_for_a_course_or_a_meeting.label + "</strong>" + frmData.fld_is_this_request_for_a_course_or_a_meeting.value + "</p><br>\n";
+        inputs += "<p><strong>" + frmData.fld_is_this_request_for_a_course_or_a_meeting.label + ":</strong> " + frmData.fld_is_this_request_for_a_course_or_a_meeting.value + "</p><br>\n";
         data['field_1600'] = frmData.fld_is_this_request_for_a_course_or_a_meeting.value;
     }
     if (frmData.fld_is_this_request_for_a_course_or_a_meeting.value && frmData.fld_is_this_request_for_a_course_or_a_meeting.value === 'Meeting') {
         meetingInfo += "\n<h3>" + frmData.sect_meeting_information.title + "</h3>\n\n<p>";
         if (frmData.sect_meeting_information.fields.fld_meeting_title.value) {
-            meetingInfo += "<strong>" + frmData.sect_meeting_information.fields.fld_meeting_title.label + "</strong>" + frmData.sect_meeting_information.fields.fld_meeting_title.value + "<br>\n";
+            meetingInfo += "<strong>" + frmData.sect_meeting_information.fields.fld_meeting_title.label + ":</strong> " + frmData.sect_meeting_information.fields.fld_meeting_title.value + "<br>\n";
             data['field_1601'] = frmData.sect_meeting_information.fields.fld_meeting_title.value;
         }
         if (frmData.sect_meeting_information.fields.fld_meeting_description.value) {
-            meetingInfo += "<strong>" + frmData.sect_meeting_information.fields.fld_meeting_description.label + "</strong>" + frmData.sect_meeting_information.fields.fld_meeting_description.value + "<br>\n";
+            meetingInfo += "<strong>" + frmData.sect_meeting_information.fields.fld_meeting_description.label + ":</strong> " + frmData.sect_meeting_information.fields.fld_meeting_description.value + "<br>\n";
             data['field_1602'] = frmData.sect_meeting_information.fields.fld_meeting_description.value;
         }
         meetingInfo += "</p><br>\n";
@@ -2245,20 +2243,20 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
     reservationInfo += "<br>\n";
     roomInfo += "\n<h3>"+frmData.sect_room_usage.title+"</h3>\n\n";
     if (frmData.sect_room_usage.fields.fld_location_room.value) {
-        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_location_room.label + "</strong>" + frmData.sect_room_usage.fields.fld_location_room.value + "<br>\n";
+        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_location_room.label + ":</strong> " + frmData.sect_room_usage.fields.fld_location_room.value + "<br>\n";
         data['field_1612'] = frmData.sect_room_usage.fields.fld_location_room.value;
     }
     if (frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value) {
-        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.label + "</strong>" + frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value + "<br>\n";
+        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.label + ":</strong> " + frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value + "<br>\n";
         data['field_1613'] = frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value;
     }
     if (frmData.sect_room_usage.fields.fld_number_of_attendees.value) {
-        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_number_of_attendees.label + "</strong>" + frmData.sect_room_usage.fields.fld_number_of_attendees.value + "<br>\n";
+        roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_number_of_attendees.label + ":</strong> " + frmData.sect_room_usage.fields.fld_number_of_attendees.value + "<br>\n";
         data['field_1614'] = frmData.sect_room_usage.fields.fld_number_of_attendees.value;
     }
     if (frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value && frmData.sect_room_usage.fields.fld_will_you_use_the_equipment.value === 'Yes') {
         if (!isObjectEmpty(frmData.sect_room_usage.fields.fld_who_is_participating.value)) {
-            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_who_is_participating.label + "</strong><br>\n";
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_who_is_participating.label + ":</strong> <br>\n";
             roomInfo += "<ul>";
             for (let key in frmData.sect_room_usage.fields.fld_who_is_participating.value) {
                 roomInfo += "<li>" + frmData.sect_room_usage.fields.fld_who_is_participating.value[key] + "</li>\n";
@@ -2266,67 +2264,67 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
             roomInfo += "</ul><br>\n";
             data['field_1615'] = Object.keys(frmData.sect_room_usage.fields.fld_who_is_participating.value).join(', ');
             if (frmData.sect_room_usage.fields.fld_who_is_participating.value.hasOwnProperty("Other...")) {
-                roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_other_participants.label + "</strong><br>\n" + frmData.sect_room_usage.fields.fld_other_participants.value + "<br>\n";
+                roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_other_participants.label + ":</strong> " + frmData.sect_room_usage.fields.fld_other_participants.value + "<br>\n";
                 data['field_1616'] = frmData.sect_room_usage.fields.fld_other_participants.value;
             }
         }
         if (frmData.sect_room_usage.fields.fld_who_is_hosting_this.value) {
-            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_who_is_hosting_this.label + "</strong>" + frmData.sect_room_usage.fields.fld_who_is_hosting_this.value + "<br>\n";
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_who_is_hosting_this.label + ":</strong> " + frmData.sect_room_usage.fields.fld_who_is_hosting_this.value + "<br>\n";
             data['field_1617'] = frmData.sect_room_usage.fields.fld_who_is_hosting_this.value;
         }
         if (frmData.sect_room_usage.fields.fld_who_is_hosting_this.value === 'Other...') {
             if (frmData.sect_room_usage.fields.fld_other_institution_hosting.value) {
-                roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_other_institution_hosting.label + "</strong>" + frmData.sect_room_usage.fields.fld_other_institution_hosting.value + "<br>\n";
+                roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_other_institution_hosting.label + ":</strong> " + frmData.sect_room_usage.fields.fld_other_institution_hosting.value + "<br>\n";
                 data['field_1618'] = frmData.sect_room_usage.fields.fld_other_institution_hosting.value;
             }
         }
         if (frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value) {
-            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.label + "</strong>" + frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value + "<br>\n";
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.label + ":</strong> " + frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value + "<br>\n";
             data['field_1619'] = frmData.sect_room_usage.fields.fld_do_you_anticipate_needing_help.value;
         }
         if (frmData.sect_room_usage.fields.fld_pre_event_access_needs.value) {
-            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_pre_event_access_needs.label + "</strong>" + frmData.sect_room_usage.fields.fld_pre_event_access_needs.value + "<br>\n";
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_pre_event_access_needs.label + ":</strong> " + frmData.sect_room_usage.fields.fld_pre_event_access_needs.value + "<br>\n";
             data['field_1620'] = frmData.sect_room_usage.fields.fld_pre_event_access_needs.value;
         }
         if (frmData.sect_room_usage.fields.fld_post_event_access_needs.value) {
-            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_post_event_access_needs.label + "</strong>" + frmData.sect_room_usage.fields.fld_post_event_access_needs.value + "<br>\n";
+            roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_post_event_access_needs.label + ":</strong> " + frmData.sect_room_usage.fields.fld_post_event_access_needs.value + "<br>\n";
             data['field_1621'] = frmData.sect_room_usage.fields.fld_post_event_access_needs.value;
         }            
     }
     roomInfo += "<br>\n";
     commentInfo += "\n<h3>" + frmData.sect_comments.title + "</h3>\n\n<p>";
     if (frmData.sect_comments.fields.fld_provide_any_additional_information.value) {
-        commentInfo += "<strong>" + frmData.sect_comments.fields.fld_provide_any_additional_information.label + "</strong>" + frmData.sect_comments.fields.fld_provide_any_additional_information.value + "<br>\n";
+        commentInfo += "<strong>" + frmData.sect_comments.fields.fld_provide_any_additional_information.label + ":</strong> " + frmData.sect_comments.fields.fld_provide_any_additional_information.value + "<br>\n";
         data['field_1622'] = frmData.sect_comments.fields.fld_provide_any_additional_information.value;
     }
     commentInfo += "</p><br>\n";
     requestorInfo += "\n<h3>" + frmData.sect_requestor_information.title + "</h3>\n\n<p>";
     if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + "</strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
         data['field_1593'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
     }
     if (frmData.sect_requestor_information.fields.fld_name.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + "</strong>" + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
         data['field_1594'] = frmData.sect_requestor_information.fields.fld_name.value;
     }
     if (frmData.sect_requestor_information.fields.fld_email_address.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + "</strong>" + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
         data['field_1595'] = frmData.sect_requestor_information.fields.fld_email_address.value;
     }
     if (frmData.sect_requestor_information.fields.fld_phone_number.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_phone_number.label + "</strong>" + frmData.sect_requestor_information.fields.fld_phone_number.value + "<br>\n";
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_phone_number.value + "<br>\n";
         data['field_1596'] = frmData.sect_requestor_information.fields.fld_phone_number.value;
     }
     if (frmData.sect_requestor_information.fields.fld_university_affiliation.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.label + "</strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.value + "<br>\n";
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_affiliation.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_affiliation.value + "<br>\n";
         data['field_1597'] = frmData.sect_requestor_information.fields.fld_university_affiliation.value;
     }
     if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value) {
-        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + "</strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_university_department_or_school.value + "<br>\n";
         data['field_1598'] = frmData.sect_requestor_information.fields.fld_university_department_or_school.value;
         if (frmData.sect_requestor_information.fields.fld_university_department_or_school.value === 'Other...') {
             if (frmData.sect_requestor_information.fields.fld_other_department_or_school.value) {
-                requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.label + "</strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.value + "<br>\n";
+                requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_other_department_or_school.value + "<br>\n";
                 data['field_1599'] = frmData.sect_requestor_information.fields.fld_other_department_or_school.value;
             }
         }
