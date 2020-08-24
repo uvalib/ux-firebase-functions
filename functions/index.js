@@ -2213,11 +2213,11 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
                 data['field_1606'] = frmData.sect_course_information.fields.fld_course_section_selector.value.title;
             }
             if (frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime) {
-                courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime + "<br>\n";
+                courseInfo += "<strong>Meeting time:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime + "<br>\n";
                 data['field_1607'] = frmData.sect_course_information.fields.fld_course_section_selector.value.meetingTime;
             }
             if (frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment) {
-                courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment + "<br>\n";
+                courseInfo += "<strong>Enrollment:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment + "<br>\n";
                 data['field_1608'] = frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment;
             }
         }
