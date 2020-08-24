@@ -156,7 +156,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processReportLibraryIncident(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'request_events_space') {
         return processRequestEventSpace(requestId, when, formFields, libraryOptions, patronOptions);
-    } else if (formId === 'oom_room_request') {
+    } else if (formId === 'zoom_room_request') {
         return processRequestZoomRoom(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'government_information_contact_u') {
         return processGovernmentInformationRequest(requestId, when, formFields, libraryOptions, patronOptions);
@@ -560,7 +560,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
             }
             if ((frmData.fld_format.value === 'Journal Subscription') || (frmData.fld_format.value === 'Other') || (frmData.fld_format.value === 'Other (No print books.)')) {
                 libOptions.subject += 'to Reserves Librarian';
-            } else if (frmData.fld_format.value === 'Database') {
+            } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dataset')) {
                 libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
                 libOptions.subject += 'to Reserves Librarian';
             } else if (frmData.fld_format.value === 'Dissertation or Thesis') {
@@ -582,7 +582,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         } else if (frmData.fld_format.value === 'Video') {
             libOptions.to = 'Libselect_video@virginia.edu';
             libOptions.subject += 'to Subject Librarian';
-        } else if (frmData.fld_format.value === 'Database') {
+        } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dataset')) {
             libOptions.to = 'purchase-requests@virginia.libanswers.com,data@virginia.edu';
             libOptions.subject += 'to Collection Librarians';
         } else {
@@ -636,6 +636,9 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                         break;
                     case 'Computer Science':
                         libOptions.to = 'lib-comp-sci-books@virginia.edu';
+                        break;
+                    case 'Data Science':
+                        libOptions.to = 'jah2ax@virginia.edu';
                         break;
                     case 'Drama':
                         libOptions.to = 'lib-drama-books@virginia.edu';
@@ -746,6 +749,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                     case 'Civil and Environmental Engineering':
                     case 'Commerce':
                     case 'Computer Science':
+                    case 'Data Science':
                     case 'Drama':
                     case 'East Asian':
                     case 'Economics':
@@ -2354,53 +2358,6 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
     
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestZoomRoomDatasetApi, data);
-    }
-    catch (error) {
-        console.log(`error: ${JSON.stringify(error)}`);
-        return error;
-    }
-}
-
-async function processGovernmentInformationRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let inputs = msg = '';
-    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
-    let data = { 'field_619': reqId, 'ts_start': submitted };
-    
-    // Prepare email message body and LibInsight data parameters
-    if (frmData.fld_name.value) {
-        inputs += "<strong>" + frmData.fld_name.label + ":</strong> " + frmData.fld_name.value + "<br>\n";
-        data['field_623'] = frmData.fld_name.value;
-    }
-    if (frmData.fld_email_address.value) {
-        inputs += "<strong>" + frmData.fld_email_address.label + ":</strong> " + frmData.fld_email_address.value + "<br>\n";
-        data['field_624'] = frmData.fld_email_address.value;
-    }
-    if (frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value) {
-        inputs += "\n<h3>" + frmData.sect_question_or_comment.title + "</h3>\n\n<p>" + frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value + "</p><br>\n";
-        data['field_625'] = frmData.sect_question_or_comment.fields.fld_enter_your_question_or_comment_regarding_governement_resourc.value;
-    }
-    msg = "<p>The question below was submitted through the Government Information Resources Contact Us page:</p><br>\n\n";
-
-    // Prepare email content for Library staff
-    libOptions.from = frmData.fld_email_address.value;
-    libOptions.replyTo = frmData.fld_email_address.value;
-    // @TODO Routing goes to Govtinfo address in production: govtinfo@groups.mail.virginia.edu
-    libOptions.to = 'jlk4p@virginia.edu';
-    libOptions.subject = 'Reference Referral';
-    libOptions.html = msg + inputs + reqText;
-    libOptions.text = stripHtml(msg + inputs + reqText);
-
-    // Prepare email confirmation content for patron
-    msg = "<p>Your request (copied below) has been received and will be referred to Government Information Resources.</p><br>\n\n";
-    userOptions.from = '"U.Va. Library: Govt. Info. Svcs." <govtinfo@groups.mail.virginia.edu>';
-    userOptions.replyTo = '"U.Va. Library: Govt. Info. Svcs." <govtinfo@groups.mail.virginia.edu>';
-    userOptions.to = frmData.fld_email_address.value;
-    userOptions.subject = 'Your reference referral';
-    userOptions.html = msg + inputs + reqText;
-    userOptions.text = stripHtml(msg + inputs + reqText);
-    
-    try {
-        return postEmailAndData(reqId, libOptions, userOptions, governmentInformationDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
