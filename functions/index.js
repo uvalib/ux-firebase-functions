@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
-const bucket = storage.bucket('uvalib-api.appspot.com'); 
+const bucket = storage.bucket('uvalib-api.appspot.com');
 const nodeFetch = require('node-fetch');
 const stripHtml = require('string-strip-html');
 const moment = require('moment');
@@ -50,7 +50,7 @@ let queryString = '';
     });
     // execute all updates in one go and return the result to end the function
     return ref.update(updates);
-});*/ 
+});*/
 
 // Clean up form request file uploads once a day.
 exports.fileUploadCleanup = functions.pubsub.schedule('every day 14:05').timeZone('America/New_York').onRun(async context => {
@@ -89,6 +89,42 @@ async function getFilesUploaded() {
     });
     return files;
 }
+
+exports.libraryOccupancyLogging = functions.database.instance('uvalib-api-occupancy')
+    .ref('/locations-schemaorg/location/{libraryId}/occupancy')
+    .onUpdate((change, context) => {
+      const libraryId = context.params.libraryId;
+      const entry = change.after.val();
+      change.after.ref.parent.child("occupancylogs").child(entry.timestamp_end)
+          .set({value:entry.value});
+    });
+exports.libraryNoMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
+    .ref('/locations-schemaorg/location/{libraryId}/noMaskCount')
+    .onUpdate((change, context) => {
+      const libraryId = context.params.libraryId;
+      const entry = change.after.val();
+      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp_end)
+          .set({value:entry.value});
+    });
+
+exports.occupancyLogging = functions.database.instance('uvalib-api-occupancy')
+    .ref('/locations-schemaorg/location/{libraryId}/containedInPlace/{locationId}/occupancy')
+    .onUpdate((change, context) => {
+      const libraryId = context.params.libraryId;
+      const locationId = context.params.locationId;
+      const entry = change.after.val();
+      change.after.ref.parent.child("occupancylogs").child(entry.timestamp)
+          .set({value:entry.value});
+    });
+exports.noMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
+    .ref('/locations-schemaorg/location/{libraryId}/containedInPlace/{locationId}/noMaskCount')
+    .onUpdate((change, context) => {
+      const libraryId = context.params.libraryId;
+      const locationId = context.params.locationId;
+      const entry = change.after.val();
+      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp)
+          .set({value:entry.value});
+    });
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
@@ -264,7 +300,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     // Prepare email message body and LibInsight data parameters
     // The admin message has a few fields out of order placed at the top.
     // Fund Code and library location are internal fields defined for use in routing to Acquisitions and Collections Mgmt.
-    // Fund code value depends on if the item is for reserve and what format the item is. 
+    // Fund code value depends on if the item is for reserve and what format the item is.
     // Library location depends on if the item is for reserve and which library location was specified.
     // Since fund code and library location are for admin purposes, they will not get saved to LibInsight data.
     let msg = fundCode = libraryLocation = "";
@@ -843,7 +879,7 @@ async function processLibraryClassRequest(reqId, submitted, frmData, libOptions,
     if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value) {
         instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_department_or_school.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_university_department_or_school.value + "<br>\n";
         data['field_1548'] = frmData.sect_instructor_information.fields.fld_university_department_or_school.value;
-        if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value === "Other..." 
+        if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value === "Other..."
             && frmData.sect_instructor_information.fields.fld_other_department_or_school.value) {
             instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_other_department_or_school.label + "</strong><br>\n" + frmData.sect_instructor_information.fields.fld_other_department_or_school.value + "<br>\n";
             data['field_1549'] = frmData.sect_instructor_information.fields.fld_other_department_or_school.value;
@@ -990,7 +1026,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     if (frmData.sect_your_contact_information.fields.fld_uva_affiliation.value) {
         contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_uva_affiliation.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_uva_affiliation.value + "<br>\n";
         data['field_881'] = frmData.sect_your_contact_information.fields.fld_uva_affiliation.value;
-        if (frmData.sect_your_contact_information.fields.fld_uva_affiliation.value === "Unaffiliated" 
+        if (frmData.sect_your_contact_information.fields.fld_uva_affiliation.value === "Unaffiliated"
             && frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.value) {
             contactInfo += "<strong>" + frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.label + "</strong><br>\n" + frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.value + "<br>\n";
             data['field_882'] = frmData.sect_your_contact_information.fields.fld_please_list_your_group_or_institution.value;
@@ -999,9 +1035,9 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     contactInfo += "</p><br>\n";
     // Create course info output content and set appropriate LibInsight fields.
     if ((frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.course)
-        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.section) 
-        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.title) 
-        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment) 
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.section)
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.title)
+        || (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.enrollment)
         || (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value && (frmData.sect_course_information_if_applicable_.fields.fld_course_syllabus.value.fids.length > 0))) {
         courseInfo += "\n<h3>"+frmData.sect_course_information_if_applicable_.title+"</h3>\n\n<p>";
         if (frmData.sect_course_information_if_applicable_.fields.fld_course_section_selector.value.term) {
@@ -1156,7 +1192,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     userOptions.to = frmData.sect_your_contact_information.fields.fld_email_address.value;
     userOptions.html = patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     userOptions.text = stripHtml(patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, specCollInstructionDatasetApi, data);
     }
@@ -1170,7 +1206,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     let instructorInfo = courseInfo = materialsInfo = msg = instructorName = instructorEmail = courseNum = materials = itemDetails = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_967': reqId, 'ts_start': submitted, 'ts_end': submitted };
-    
+
     // Prepare email message body and LibInsight data parameters
     instructorInfo += "\n<h3>"+frmData.sect_instructor_information_.title+"</h3>\n\n<p>";
     if (frmData.sect_instructor_information_.fields.fld_uva_computing_id.value) {
@@ -1331,7 +1367,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     }
     materialsInfo += "</p><br>\n";
 
-    // Prepare email content for Library staff    
+    // Prepare email content for Library staff
     libOptions.from = instructorEmail;
     libOptions.replyTo = instructorEmail;
     libOptions.to = 'lib-reserves@virginia.edu';
@@ -1353,13 +1389,13 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
         userOptions.to = 'lib-reserves@virginia.edu';
     } else {
         // send second unneeded email here so that it doesn't generate extra ticket in Service Desk;
-        // (form workflow assumes 2 emails generated for each submission: library staff and other is confirmation) 
+        // (form workflow assumes 2 emails generated for each submission: library staff and other is confirmation)
         userOptions.to = 'no-reply-library@virginia.edu';
     }
     userOptions.subject = 'Personal Copy - ' + instructorName + ' ' + courseNum;
     userOptions.html = msg + instructorInfo + courseInfo + materialsInfo + reqText;
     userOptions.text = stripHtml(msg + instructorInfo + courseInfo + materialsInfo + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, personalCopyReserveDatasetApi, data);
     }
@@ -1373,7 +1409,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     let requestorInfo = courseInfo = dateInfo = projInfo = requestorName = requestorEmail = msg = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_1003': reqId, 'ts_start': submitted, 'ts_end': submitted };
-    
+
     // Prepare email message body and LibInsight data parameters
     requestorInfo += "\n<h3>"+frmData.sect_requestor_information.title+"</h3>\n\n<p>";
     if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
@@ -1468,7 +1504,7 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
     userOptions.subject = 'Your research tutorial request';
     userOptions.html = msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText;
     userOptions.text = stripHtml(msg + requestorInfo + courseInfo + dateInfo + projInfo + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, researchTutorialRequestDatasetApi, data);
     }
@@ -1541,7 +1577,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
         }
     }
     requestorInfo += "</p><br>\n";
-   
+
     // Create format's bibliographic info output and set appropriate LibInsight fields.
     biblioInfo += "\n<h3>" + frmData.sect_bibliographic_information.title + "</h3>\n\n<p>";
     if (frmData.sect_bibliographic_information.fields.fld_isbn.value) {
@@ -1695,7 +1731,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
         if (frmData.fld_is_this_a_rush_request_.value === 'Yes') { // include Acquisitions for rush request
             libOptions.to += ',lib-orders@virginia.edu';
         }
-    } else if ((frmData.sect_bibliographic_information.fields.fld_format.value === 'Book') || 
+    } else if ((frmData.sect_bibliographic_information.fields.fld_format.value === 'Book') ||
             (frmData.sect_bibliographic_information.fields.fld_format.value === 'Dissertation or Thesis')) {
         libOptions.to = 'lib-collections@virginia.edu';
         if (frmData.fld_is_this_a_rush_request_.value === 'Yes') { // include Acquisitions for rush request
@@ -1846,7 +1882,7 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
     userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
     userOptions.html = requestorInfo + reservationInfo + preferredDateInfo + equipmentSpaceInfo + msg + reqText;
     userOptions.text = stripHtml(requestorInfo + reservationInfo + preferredDateInfo + equipmentSpaceInfo + msg + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, internalRoomRequestDatasetApi, data);
     }
@@ -1859,7 +1895,7 @@ async function processInternalRoomRequest(reqId, submitted, frmData, libOptions,
 async function processReportLibraryIncident(reqId, submitted, frmData, libOptions, userOptions) {
     let msg = incidentInfo = suspectInfo = victimInfo = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
-    
+
     // Prepare email message body and LibInsight data parameters
     incidentInfo += "\n<h3>" + frmData.sect_incident.title + "</h3>\n\n<p>";
     console.log(frmData.sect_incident.fields.fld_date_and_time_of_incident.value);
@@ -1988,7 +2024,7 @@ async function processReportLibraryIncident(reqId, submitted, frmData, libOption
     userOptions.subject = 'Library incident reported by you';
     userOptions.html = msg + incidentInfo + suspectInfo + victimInfo + reqText;
     userOptions.text = stripHtml(msg + incidentInfo + suspectInfo + victimInfo + reqText);
-    
+
     try {
         return postEmailOnly(reqId, libOptions, userOptions);
     }
@@ -2002,7 +2038,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     let inputs = contactInfo = eventInfo = msg = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_1590': reqId, 'ts_start': submitted };
-    
+
     // Prepare email message body and LibInsight data parameters
     contactInfo += "\n<h3>" + frmData.sect_contact_information.title + "</h3>\n\n<p>";
     if (frmData.sect_contact_information.fields.fld_name.value) {
@@ -2083,7 +2119,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
         data['field_1579'] = frmData.sect_event_information.fields.fld_are_you_expecting_minors.value;
     }
     if (frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime && frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime.length > 0) {
-        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_preferred_date_of_event.label + ":</strong><br>\n"; 
+        eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_preferred_date_of_event.label + ":</strong><br>\n";
         let preferredDate = '';
         for (let i=0; i < frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime.length; i++) {
             const choice = frmData.sect_event_information.fields.fld_preferred_date_of_event.value.sessionDateTime[i];
@@ -2161,7 +2197,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     userOptions.subject = 'Harrison Event Space Request';
     userOptions.html = msg + contactInfo + eventInfo + inputs + reqText;
     userOptions.text = stripHtml(msg + contactInfo + eventInfo + inputs + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestEventSpaceDatasetApi, data);
     }
@@ -2175,7 +2211,7 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
     let requestorInfo = meetingInfo = courseInfo = reservationInfo = roomInfo = commentInfo = msg = inputs= '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_1623': reqId, 'ts_start': submitted };
-    
+
     if (frmData.fld_is_this_request_for_a_course_or_a_meeting.value) {
         inputs += "<p><strong>" + frmData.fld_is_this_request_for_a_course_or_a_meeting.label + ":</strong> " + frmData.fld_is_this_request_for_a_course_or_a_meeting.value + "</p><br>\n";
         data['field_1600'] = frmData.fld_is_this_request_for_a_course_or_a_meeting.value;
@@ -2289,7 +2325,7 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
         if (frmData.sect_room_usage.fields.fld_post_event_access_needs.value) {
             roomInfo += "<strong>" + frmData.sect_room_usage.fields.fld_post_event_access_needs.label + ":</strong> " + frmData.sect_room_usage.fields.fld_post_event_access_needs.value + "<br>\n";
             data['field_1621'] = frmData.sect_room_usage.fields.fld_post_event_access_needs.value;
-        }            
+        }
     }
     roomInfo += "<br>\n";
     commentInfo += "\n<h3>" + frmData.sect_comments.title + "</h3>\n\n<p>";
@@ -2352,7 +2388,7 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
     userOptions.subject = 'Your Zoom Room reservation request';
     userOptions.html = msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText;
     userOptions.text = stripHtml(msg + requestorInfo + inputs + meetingInfo + courseInfo + reservationInfo + roomInfo + commentInfo + reqText);
-    
+
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestZoomRoomDatasetApi, data);
     }
