@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
 const bucket = storage.bucket('uvalib-api.appspot.com');
@@ -89,13 +90,24 @@ async function getFilesUploaded() {
     });
     return files;
 }
-
+/*
+//admin.initializeApp(functions.config().firebase);
+exports.getLocations = functions.https.onRequest((req,res)=>{
+    return admin.database().instance('uvalib-api-occupancy')
+    .ref('/locations-schemaorg/location/')
+    .once('value')
+    .then((snapshot)=>{
+        return req.send({"hello":"world"});
+    })
+});
+*/
 exports.libraryOccupancyLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/occupancy')
     .onUpdate((change, context) => {
       const libraryId = context.params.libraryId;
       const entry = change.after.val();
-      change.after.ref.parent.child("occupancylogs").child(entry.timestamp_end)
+      functions.database.instance('uvalib-api-occupancy').ref(`/locationsLogs/${libraryId}/occupancylogs`).child(entry.timestamp_end)
+//      change.after.ref.parent.child("occupancylogs").child(entry.timestamp_end)
           .set({value:entry.value});
     });
 exports.libraryNoMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
@@ -103,17 +115,18 @@ exports.libraryNoMaskCountLogging = functions.database.instance('uvalib-api-occu
     .onUpdate((change, context) => {
       const libraryId = context.params.libraryId;
       const entry = change.after.val();
-      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp_end)
+      functions.database.instance('uvalib-api-occupancy').ref(`/locationsLogs/${libraryId}/noMaskCountlogs`).child(entry.timestamp_end)
+//      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp_end)
           .set({value:entry.value});
     });
-
 exports.occupancyLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/containedInPlace/{locationId}/occupancy')
     .onUpdate((change, context) => {
       const libraryId = context.params.libraryId;
       const locationId = context.params.locationId;
       const entry = change.after.val();
-      change.after.ref.parent.child("occupancylogs").child(entry.timestamp)
+      functions.database.instance('uvalib-api-occupancy').ref(`/locationsLogs/${libraryId}/${locationId}/occupancylogs`).child(entry.timestamp_end)
+//      change.after.ref.parent.child("occupancylogs").child(entry.timestamp)
           .set({value:entry.value});
     });
 exports.noMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
@@ -122,7 +135,8 @@ exports.noMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
       const libraryId = context.params.libraryId;
       const locationId = context.params.locationId;
       const entry = change.after.val();
-      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp)
+      functions.database.instance('uvalib-api-occupancy').ref(`/locationsLogs/${libraryId}/${locationId}/noMaskCountlogs`).child(entry.timestamp_end)
+//      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp)
           .set({value:entry.value});
     });
 
