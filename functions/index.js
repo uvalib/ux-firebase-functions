@@ -91,54 +91,43 @@ async function getFilesUploaded() {
     return files;
 }
 admin.initializeApp({databaseURL: "https://uvalib-api-occupancy.firebaseio.com"});
-/*
-//admin.initializeApp(functions.config().firebase);
-exports.getLocations = functions.https.onRequest((req,res)=>{
-    return admin.database().instance('uvalib-api-occupancy')
-    .ref('/locations-schemaorg/location/')
-    .once('value')
-    .then((snapshot)=>{
-        return req.send({"hello":"world"});
-    })
-});
-*/
 exports.libraryOccupancyLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/occupancy')
     .onUpdate((change, context) => {
+      const userId = (context.auth && context.auth.uid)? context.auth.uid:"";
       const libraryId = context.params.libraryId;
       const entry = change.after.val();
       admin.database().ref(`locationsLogs/${libraryId}/occupancylogs/${entry.timestamp_end}`)
-//      change.after.ref.parent.child("occupancylogs").child(entry.timestamp_end)
-          .set({value:entry.value});
+          .set({value:entry.value, userId:userId});
     });
 exports.libraryNoMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/noMaskCount')
     .onUpdate((change, context) => {
+      const userId = (context.auth && context.auth.uid)? context.auth.uid:"";
       const libraryId = context.params.libraryId;
       const entry = change.after.val();
       admin.database().ref(`locationsLogs/${libraryId}/noMaskCountlogs/${entry.timestamp_end}`)
-//      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp_end)
-          .set({value:entry.value});
+          .set({value:entry.value, userId:userId});
     });
 exports.occupancyLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/containedInPlace/{locationId}/occupancy')
     .onUpdate((change, context) => {
+      const userId = (context.auth && context.auth.uid)? context.auth.uid:"";
       const libraryId = context.params.libraryId;
       const locationId = context.params.locationId;
       const entry = change.after.val();
       admin.database().ref(`/locationsLogs/${libraryId}/${locationId}/occupancylogs/${entry.timestamp}`)
-//      change.after.ref.parent.child("occupancylogs").child(entry.timestamp)
-          .set({value:entry.value});
+          .set({value:entry.value, userId:userId});
     });
 exports.noMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/containedInPlace/{locationId}/noMaskCount')
     .onUpdate((change, context) => {
+      const userId = (context.auth && context.auth.uid)? context.auth.uid:"";
       const libraryId = context.params.libraryId;
       const locationId = context.params.locationId;
       const entry = change.after.val();
       admin.database().ref(`/locationsLogs/${libraryId}/${locationId}/noMaskCountlogs/${entry.timestamp}`)
-//      change.after.ref.parent.child("noMaskCountlogs").child(entry.timestamp)
-          .set({value:entry.value});
+          .set({value:entry.value, userId:userId});
     });
 
 // Process each form request that gets submitted.
