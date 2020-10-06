@@ -318,6 +318,8 @@ function getFormFields(formDefn) {
             fields[field] = { label: formDefn[i].title, value: formDefn[i].value };
             if (formDefn[i].type === 'file' && formDefn[i].email_type) {
                 fields[field].email_type = formDefn[i].email_type;
+            } else if (formDefn[i].type === 'webform_markup') {
+                fields[field].markup = formDefn[i].markup;
             }
         } else if (field.match(/^fldset_/)) {
             // @TODO need to flesh this out some depending on ways might use this down the road...
@@ -330,10 +332,12 @@ function getFormFields(formDefn) {
 function getSectionFields(section) {
     let fields = {};
     for (var key in section) {
-        if (key.match(/^fld_/)) {
+        if (key.match(/^fld_|mkup_/)) {
             fields[key] = { label: section[key].title, value: section[key].value };
             if (section[key].type === 'file' && section[key].email_type) {
                 fields[key].email_type = section[key].email_type;
+            } else if (section[key].type === 'webform_markup') {
+                fields[key].markup = section[key].markup;
             }
         }
         // @TODO address fieldset down the road?
