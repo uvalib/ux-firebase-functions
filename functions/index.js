@@ -31,6 +31,7 @@ const requestEventSpaceDatasetApi = functions.config().libinsighturl.eventspacer
 const requestVideoClipsDatasetApi = functions.config().libinsighturl.videocliprequest;
 const requestMediaClassroomDatasetApi = functions.config().libinsighturl.mediaclassroomrequest;
 const requestZoomRoomDatasetApi = functions.config().libinsighturl.zoomroomrequest;
+const requestInternalZoomWebinarDatasetApi = functions.config().libinsighturl.internalzoomwebinarrequest;
 const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
@@ -198,11 +199,27 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processRequestEventSpace(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'zoom_room_request') {
         return processRequestZoomRoom(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'zoom_webinar_request') {
+        return processRequestZoomWebinar(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
     }
 
 });
+
+function dateTimeToString(dateTime) {
+    let str = '';
+    if (dateTime.date !== "") {
+        str += convDateYMDtoMDY(dateTime.date);
+        if (dateTime.startTime !== "") {
+            str +=  " " + convTime24to12(dateTime.startTime);
+        }
+        if (dateTime.endTime !== "") {
+            str += " " + convTime24to12(dateTime.endTime);
+        }
+    }
+    return str;
+}
 
 function choiceDateTimeToString(choice) {
     let str = '';
@@ -2395,6 +2412,219 @@ async function processRequestZoomRoom(reqId, submitted, frmData, libOptions, use
 
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestZoomRoomDatasetApi, data);
+    }
+    catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
+}
+
+async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, userOptions) {
+    let requestorInfo = webinarInfo = msg = inputs= '';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    let data = { 'field_1632': reqId, 'ts_start': submitted };
+
+    webinarInfo += "<br>\n";
+    webinarInfo += "\n<h3>"+frmData.sect_webinar_information.title+"</h3>\n\n";
+    if (frmData.sect_webinar_information.fields.fld_topic.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_topic.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_topic.value + "<br>\n";
+        data['field_1634'] = frmData.sect_webinar_information.fields.fld_topic.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_description.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_description.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_description.value + "<br>\n";
+        data['field_1635'] = frmData.sect_webinar_information.fields.fld_description.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_use_a_template_from_a_previous_webinar.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_use_a_template_from_a_previous_webinar.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_use_a_template_from_a_previous_webinar.value + "<br>\n";
+        data['field_1636'] = frmData.sect_webinar_information.fields.fld_use_a_template_from_a_previous_webinar.value;
+        if (frmData.sect_webinar_information.fields.fld_use_a_template_from_a_previous_webinar.value === "Yes") {
+            if (frmData.sect_webinar_information.fields.fld_zoom_template.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_zoom_template.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_zoom_template.value + "<br>\n";
+                data['field_1637'] = frmData.sect_webinar_information.fields.fld_zoom_template.value;
+            }
+        }
+    }
+    webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_hr_break.markup + "<br/>\n\n";
+    if (frmData.sect_webinar_information.fields.fld_date_and_time_of_event.value) {
+        let dateStr = dateTimeToString(frmData.sect_webinar_information.fields.fld_date_and_time_of_event.value);
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_date_and_time_of_event.label + ":</strong> " + dateStr + "<br>\n";
+        data['field_1638'] = dateStr;
+    }
+    if (frmData.sect_webinar_information.fields.fld_duration.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_duration.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_duration.value + "<br>\n";
+        data['field_1639'] = frmData.sect_webinar_information.fields.fld_duration.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_time_zone.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_time_zone.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_time_zone.value + "<br>\n";
+        data['field_1640'] = frmData.sect_webinar_information.fields.fld_time_zone.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_recurring.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_recurring.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_recurring.value + "<br>\n";
+        data['field_1641'] = frmData.sect_webinar_information.fields.fld_recurring.value;
+        if (frmData.sect_webinar_information.fields.fld_recurring.value === 'Yes') {
+            webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_if_recurring_how_often.markup + "<br/>\n\n";
+            if (frmData.sect_webinar_information.fields.fld_repeat_frequency.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_repeat_frequency.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_repeat_frequency.value + "<br>\n";
+                data['field_1642'] = frmData.sect_webinar_information.fields.fld_repeat_frequency.value;
+            }
+            if (frmData.sect_webinar_information.fields.fld_repeat_every_n_day.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_repeat_every_n_day.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_repeat_every_n_day.value + "<br>\n";
+                data['field_1643'] = frmData.sect_webinar_information.fields.fld_repeat_every_n_day.value;
+            }
+            webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_if_recuring_end_by.markup + "<br/>\n\n";
+            if (frmData.sect_webinar_information.fields.fld_end_by_date.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_end_by_date.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_end_by_date.value + "<br>\n";
+                data['field_1644'] = frmData.sect_webinar_information.fields.fld_end_by_date.value;
+            }
+            if (frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.value + "<br>\n";
+                data['field_1645'] = frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.value;
+            }
+        }
+    }
+    if (frmData.sect_webinar_information.fields.fld_registration_required.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_registration_required.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_registration_required.value + "<br>\n";
+        data['field_1646'] = frmData.sect_webinar_information.fields.fld_registration_required.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_host_video.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_host_video.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_host_video.value + "<br>\n";
+        data['field_1647'] = frmData.sect_webinar_information.fields.fld_host_video.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_panelist_video.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_panelist_video.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_panelist_video.value + "<br>\n";
+        data['field_1648'] = frmData.sect_webinar_information.fields.fld_panelist_video.value;
+    }
+    webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_webinar_options.markup + "<br/>\n\n";
+    if (frmData.sect_webinar_information.fields.fld_q_and_a.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_q_and_a.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_q_and_a.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_q_and_a.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_enable_practice_session.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_enable_practice_session.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_enable_practice_session.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_enable_practice_session.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_enable_hd_video_for_screen_shared_video.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_enable_hd_video_for_screen_shared_video.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_enable_hd_video_for_screen_shared_video.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_enable_hd_video_for_screen_shared_video.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_only_signed_in_users_can_join_this_webinar.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_only_signed_in_users_can_join_this_webinar.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_only_signed_in_users_can_join_this_webinar.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_only_signed_in_users_can_join_this_webinar.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_record_webinar_automatically.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_record_webinar_automatically.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_record_webinar_automatically.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_record_webinar_automatically.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_alternative_hosts.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_alternative_hosts.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_alternative_hosts.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_alternative_hosts.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_panelists.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_panelists.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_panelists.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_panelists.value;
+    }
+    webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_email_settings.markup + "<br/>\n\n";
+    if (frmData.sect_webinar_information.fields.fld_reminder_emails.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_reminder_emails.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_reminder_emails.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_reminder_emails.value;
+    }
+    if (frmData.sect_webinar_information.fields.fld_reminder_emails.value === 'Yes') {
+        if (frmData.sect_webinar_information.fields.fld_name_of_contact_that_attendees_can_use.value) {
+            webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_name_of_contact_that_attendees_can_use.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_name_of_contact_that_attendees_can_use.value + "<br>\n";
+            data['field_'] = frmData.sect_webinar_information.fields.fld_name_of_contact_that_attendees_can_use.value;
+        }
+        if (frmData.sect_webinar_information.fields.fld_email_address_of_contact_that_attendees_can_use.value) {
+            webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_email_address_of_contact_that_attendees_can_use.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_email_address_of_contact_that_attendees_can_use.value + "<br>\n";
+            data['field_'] = frmData.sect_webinar_information.fields.fld_email_address_of_contact_that_attendees_can_use.value;
+        }
+        if (frmData.sect_webinar_information.fields.fld_invitation_email_to_panelists.value) {
+            webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_invitation_email_to_panelists.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_invitation_email_to_panelists.value + "<br>\n";
+            data['field_'] = frmData.sect_webinar_information.fields.fld_invitation_email_to_panelists.value;
+        }
+        if (frmData.sect_webinar_information.fields.fld_send_confirmation_email_to_registrants.value) {
+            webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_send_confirmation_email_to_registrants.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_send_confirmation_email_to_registrants.value + "<br>\n";
+            data['field_'] = frmData.sect_webinar_information.fields.fld_send_confirmation_email_to_registrants.value;
+        }
+        if (frmData.sect_webinar_information.fields.fld_send_reminder_email_to_approved_registrants_and_panelists.value) {
+            webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_send_reminder_email_to_approved_registrants_and_panelists.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_send_reminder_email_to_approved_registrants_and_panelists.value + "<br>\n";
+            data['field_'] = frmData.sect_webinar_information.fields.fld_send_reminder_email_to_approved_registrants_and_panelists.value;
+            if (frmData.sect_webinar_information.fields.fld_send_reminder_email_to_approved_registrants_and_panelists.value === 'Yes') {
+                if (frmData.sect_webinar_information.fields.fld_when_to_send_email_to_approved_registrants_and_panelists.value) {
+                    webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_when_to_send_email_to_approved_registrants_and_panelists.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_when_to_send_email_to_approved_registrants_and_panelists.value + "<br>\n";
+                    data['field_'] = frmData.sect_webinar_information.fields.fld_when_to_send_email_to_approved_registrants_and_panelists.value;
+                }
+            }
+        }
+    }
+    if (frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_attendees.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_attendees.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_attendees.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_attendees.value;
+        if (frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_attendees.value === 'Yes') {
+            if (frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_attendees_be_emailed.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_attendees_be_emailed.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_attendees_be_emailed.value + "<br>\n";
+                data['field_'] = frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_attendees_be_emailed.value;
+            }    
+        }
+    }
+    if (frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_absentees.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_absentees.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_absentees.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_absentees.value;
+        if (frmData.sect_webinar_information.fields.fld_send_follow_up_email_to_absentees.value === 'Yes') {
+            if (frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_absentees_be_emailed.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_absentees_be_emailed.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_absentees_be_emailed.value + "<br>\n";
+                data['field_'] = frmData.sect_webinar_information.fields.fld_how_many_days_after_the_event_should_absentees_be_emailed.value;
+            }    
+        }
+    }
+    webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_polls.markup + "<br/>\n\n";
+    if (frmData.sect_webinar_information.fields.fld_any_polls_needed.value) {
+        webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_any_polls_needed.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_any_polls_needed.value + "<br>\n";
+        data['field_'] = frmData.sect_webinar_information.fields.fld_any_polls_needed.value;
+        if (frmData.sect_webinar_information.fields.fld_any_polls_needed.value === 'Yes') {
+            if (frmData.sect_webinar_information.fields.fld_what_polls_are_needed.value) {
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_what_polls_are_needed.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_what_polls_are_needed.value + "<br>\n";
+                data['field_'] = frmData.sect_webinar_information.fields.fld_what_polls_are_needed.value;
+            }
+        }
+    }
+    webinarInfo += "<br>\n";
+
+    requestorInfo += "\n<h3>" + frmData.sect_requestor_information.title + "</h3>\n\n<p>";
+    if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
+        data['field_1669'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_name.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
+        data['field_1670'] = frmData.sect_requestor_information.fields.fld_name.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_email_address.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
+        data['field_1671'] = frmData.sect_requestor_information.fields.fld_email_address.value;
+    }
+    requestorInfo += "</p><br>\n";
+
+    // Prepare email content for Library staff
+    msg = "<p>The request below was submitted through the Library Internal Zoom Webinar Request form:</p><br>\n\n";
+    libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
+    libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
+    libOptions.to = 'jlk4p@virginia.edu'; //'lib-zoomweb@virginia.edu';
+    libOptions.subject = 'Internal Zoom Webinar Request';
+    libOptions.html = msg + requestorInfo + webinarInfo + reqText;
+    libOptions.text = stripHtml(msg + requestorInfo + webinarInfo + reqText);
+
+    // Prepare email confirmation content for patron
+    msg = "<p>We have received your Internal Zoom Webinar request.</p><br>\n\n";
+    msg += "<p>Below is a copy of what you submitted.</p><br>\n\n";
+    userOptions.from = '"UVA Library Zoom Webinar Team" <lib-zoomweb@virginia.edu>';
+    userOptions.replyTo = '"UVA Library Zoom Webinar Team" <lib-zoomweb@virginia.edu>';
+    userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
+    userOptions.subject = 'Your Internal Zoom Webinar Request';
+    userOptions.html = msg + requestorInfo + webinarInfo + reqText;
+    userOptions.text = stripHtml(msg + requestorInfo + webinarInfo + reqText);
+
+    try {
+        return postEmailAndData(reqId, libOptions, userOptions, requestInternalZoomWebinarDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
