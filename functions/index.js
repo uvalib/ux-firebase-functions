@@ -91,6 +91,12 @@ async function getFilesUploaded() {
     });
     return files;
 }
+
+
+
+
+
+
 admin.initializeApp({databaseURL: "https://uvalib-api-occupancy.firebaseio.com"});
 exports.libraryOccupancyLogging = functions.database.instance('uvalib-api-occupancy')
     .ref('/locations-schemaorg/location/{libraryId}/occupancy')
@@ -130,6 +136,35 @@ exports.noMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
       admin.database().ref(`/locationsLogs/${libraryId}/${locationId}/noMaskCountlogs/${entry.timestamp}`)
           .set({value:entry.value, userId:userId});
     });
+/* User Roles */
+exports.roleCreate = functions.database.instance('uvalib-api-occupancy').ref('/roles/{userId}')
+.onCreate((snapshot, context) => {
+    const userId = context.params.userId;
+    var role = {}
+    const roles = snapshot.val();
+    roles.forEach(r=>{role[r]=true})
+//          console.log(role)
+    return admin.auth().setCustomUserClaims(userId, role);
+});
+exports.roleUpdate = functions.database.instance('uvalib-api-occupancy').ref('/roles/{userId}')
+.onUpdate((snapshot, context) => {
+  const userId = context.params.userId;
+  var role = {}
+  const roles = snapshot.after.val();
+  roles.forEach(r=>{role[r]=true})
+//        console.log(role)
+  return admin.auth().setCustomUserClaims(userId, role);
+});
+exports.roleDelete = functions.database.instance('uvalib-api-occupancy').ref('/roles/{userId}')
+.onDelete((snapshot, context) => {
+  const userId = context.params.userId;
+  return admin.auth().setCustomUserClaims(userId, null);
+});
+/* end User Roles */
+
+
+
+
 
 // Process each form request that gets submitted.
 exports.processRequest = functions.database.ref('/requests/{requestId}').onCreate((snapshot, context) => {
