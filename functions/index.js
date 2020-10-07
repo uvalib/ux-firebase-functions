@@ -2645,7 +2645,8 @@ async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, 
     requestorInfo += "</p><br>\n";
 
     // Prepare email content for Library staff
-    msg = "<p>The request below was submitted through the Library Internal Zoom Webinar Request form:</p><br>\n\n";
+    msg = "<p>The request below was submitted through the Library Internal Zoom Webinar Request form.</p><br>\n\n";
+    msg += "<p><a href='https://virginia.libinsight.com/dataseta.php?id=23619'"+">Access the request in the LibInsight Internal Zoom Webinar Requests dataset.</a></p><br>\n\n";
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.to = 'lib-zoomweb@virginia.edu';
