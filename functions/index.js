@@ -2512,8 +2512,9 @@ async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, 
             }
             webinarInfo += "<br/>\n\n" + frmData.sect_webinar_information.fields.mkup_if_recuring_end_by.markup + "<br/>\n\n";
             if (frmData.sect_webinar_information.fields.fld_end_by_date.value) {
-                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_end_by_date.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_end_by_date.value + "<br>\n";
-                data['field_1644'] = frmData.sect_webinar_information.fields.fld_end_by_date.value;
+                let dateStr = dateTimeToString(frmData.sect_webinar_information.fields.fld_end_by_date.value);
+                webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_end_by_date.label + ":</strong> " + dateStr + "<br>\n";
+                data['field_1644'] = dateStr;
             }
             if (frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.value) {
                 webinarInfo += "<strong>" + frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.label + ":</strong> " + frmData.sect_webinar_information.fields.fld_end_after_n_occurrences.value + "<br>\n";
@@ -2647,7 +2648,7 @@ async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, 
     msg = "<p>The request below was submitted through the Library Internal Zoom Webinar Request form:</p><br>\n\n";
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
-    libOptions.to = 'jlk4p@virginia.edu'; //'lib-zoomweb@virginia.edu';
+    libOptions.to = 'lib-zoomweb@virginia.edu';
     libOptions.subject = 'Internal Zoom Webinar Request';
     libOptions.html = msg + requestorInfo + webinarInfo + reqText;
     libOptions.text = stripHtml(msg + requestorInfo + webinarInfo + reqText);
