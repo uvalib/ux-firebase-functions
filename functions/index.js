@@ -652,8 +652,11 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
             if (frmData.fld_format.value === 'Music Recording') {
                 libOptions.to += ',lb-mu-recordings@virginia.edu';
             }
-            if ((frmData.fld_format.value === 'Journal Subscription') || (frmData.fld_format.value === 'Other') || (frmData.fld_format.value === 'Other (No print books.)')) {
+            if (frmData.fld_format.value === 'Journal Subscription') {
                 libOptions.subject += 'to Reserves Librarian';
+            } else if (frmData.fld_format.value === 'Other') {
+                libOptions.subject += 'to Acquisitions';
+                libOptions.to += ',lib-orders@virginia.edu';
             } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dataset')) {
                 libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
                 libOptions.subject += 'to Reserves Librarian';
