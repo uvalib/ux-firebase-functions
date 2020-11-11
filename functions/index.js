@@ -1751,6 +1751,10 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.value + "<br>\n";
         data['field_1516'] = frmData.sect_bibliographic_information.fields.fld_what_classes_labs_faculty_or_students_might_use_this_dbtrial.value;
     }
+    if (frmData.sect_bibliographic_information.fields.fld_support_library_commitment_to_equity_inclusion.value) {
+        biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_support_library_commitment_to_equity_inclusion.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_support_library_commitment_to_equity_inclusion.value + "<br>\n";
+        data['field_1702'] = frmData.sect_bibliographic_information.fields.fld_support_library_commitment_to_equity_inclusion.value;
+    }
     if (frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value) {
         biblioInfo += "<strong>" + frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.label + ":</strong> " + frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value + "<br>\n";
         data['field_1517'] = frmData.sect_bibliographic_information.fields.fld_please_describe_the_content_of_this_resource.value;
@@ -1801,14 +1805,14 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
             libOptions.to += ',lib-orders@virginia.edu';
         }
     } else {
-        // All other formats (Database/Dataset, Journal Subscription, Music Score, Trials, Other) go to LibAnswers
+        // All other formats (Database/Dataset, Journal Subscription, Music Score, Other) go to LibAnswers
         libOptions.to = 'purchase-requests@virginia.libanswers.com';
         // Music scores also go to those specialists
         if (frmData.sect_bibliographic_information.fields.fld_format.value === 'Music Score') {
             libOptions.to += ',lb-mu-scores@virginia.edu';
         }
     }
-
+    
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     libOptions.html = msg + biblioInfo + requestorInfo + otherPerson + reqText;
     libOptions.text = stripHtml(msg + biblioInfo + requestorInfo + otherPerson + reqText);
