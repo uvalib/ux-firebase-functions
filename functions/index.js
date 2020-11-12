@@ -1800,10 +1800,7 @@ async function processStaffPurchaseRequest(reqId, submitted, frmData, libOptions
         }
     } else if ((frmData.sect_bibliographic_information.fields.fld_format.value === 'Book') ||
             (frmData.sect_bibliographic_information.fields.fld_format.value === 'Dissertation or Thesis')) {
-        libOptions.to = 'lib-collections@virginia.edu';
-        if (frmData.fld_is_this_a_rush_request_.value === 'Yes') { // include Acquisitions for rush request
-            libOptions.to += ',lib-orders@virginia.edu';
-        }
+        libOptions.to = 'lib-collections@virginia.edu,lib-orders@virginia.edu';
     } else {
         // All other formats (Database/Dataset, Journal Subscription, Music Score, Other) go to LibAnswers
         libOptions.to = 'purchase-requests@virginia.libanswers.com';
