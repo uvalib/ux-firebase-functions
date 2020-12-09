@@ -655,8 +655,8 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
             if (frmData.fld_format.value === 'Journal Subscription') {
                 libOptions.subject += 'to Reserves Librarian';
             } else if (frmData.fld_format.value === 'Other (not print)') {
+                libOptions.bcc += 'lib-orders@virginia.edu';
                 libOptions.subject += 'to Acquisitions';
-                libOptions.to += ',lib-orders@virginia.edu';
             } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dataset')) {
                 libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
                 libOptions.subject += 'to Reserves Librarian';
