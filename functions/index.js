@@ -366,7 +366,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
     let msg = fundCode = libraryLocation = "";
     if (frmData.fld_is_this_for_course_reserves_.value) {
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
-            if ((frmData.fld_format.value === "Book") || (frmData.fld_format.value === "eBook") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
+            if ((frmData.fld_format.value === "Other (not print)") || (frmData.fld_format.value === "Book") || (frmData.fld_format.value === "eBook") || (frmData.fld_format.value === "Dissertation or Thesis") || (frmData.fld_format.value === "Music Recording")) {
                 fundCode = "UL-RESERVES";
                 libraryLocation = "LC CLASS"; // library where typical call number gets housed
             }
