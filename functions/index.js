@@ -183,6 +183,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         from: '"UVA Library" <no-reply-library@Virginia.EDU>',
         replyTo: '',
         to: '',
+        cc: '',
         bcc: '',
         subject: '',
         text: '',
@@ -199,6 +200,7 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         from: '"UVA Library" <no-reply-library@Virginia.EDU>',
         replyTo: '"UVA Library" <NO-REPLY-LIBRARY@Virginia.EDU>',
         to: '',
+        cc: '',
         bcc: '',
         subject: '',
         text: '',
@@ -1266,7 +1268,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
 }
 
 async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let instructorInfo = courseInfo = materialsInfo = msg = instructorName = instructorEmail = courseNum = materials = itemDetails = '';
+    let instructorInfo = courseInfo = materialsInfo = msg = instructorName = instructorEmail = assistantName = assistantEmail = courseNum = materials = itemDetails = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_967': reqId, 'ts_start': submitted, 'ts_end': submitted };
 
@@ -1294,11 +1296,13 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
                 instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_instructor_name.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_instructor_name.value + "<br>\n";
                 data['field_949'] = frmData.sect_instructor_information_.fields.fld_instructor_name.value;
                 instructorName = frmData.sect_instructor_information_.fields.fld_instructor_name.value;
+                assistantName = frmData.sect_instructor_information_.fields.fld_name.value;
             }
             if (frmData.sect_instructor_information_.fields.fld_instructor_email_address.value) {
                 instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_instructor_email_address.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_instructor_email_address.value + "<br>\n";
                 data['field_950'] = frmData.sect_instructor_information_.fields.fld_instructor_email_address.value;
                 instructorEmail = frmData.sect_instructor_information_.fields.fld_instructor_email_address.value;
+                assistantEmail = frmData.sect_instructor_information_.fields.fld_email_address.value;
             }
         }
     }
@@ -1433,6 +1437,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     // Prepare email content for Library staff
     libOptions.from = instructorEmail;
     libOptions.replyTo = instructorEmail;
+    libOptions.cc = (assistantEmail !== '') ? assistantEmail : '';
     libOptions.to = 'lib-reserves@virginia.edu';
     libOptions.subject = 'Personal Copy - ' + instructorName + ' ' + courseNum;
     if (materials === 'Media') {
@@ -1448,6 +1453,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     msg = "<p>RMC copy generated to handle media content for this personal copy request.</p><br>\n\n";
     userOptions.from = instructorEmail;
     userOptions.replyTo = instructorEmail;
+    userOptions.cc = (assistantEmail !== '') ? assistantEmail : '';
     if (materials === 'Print materials and Media') {
         userOptions.to = 'lib-reserves@virginia.edu';
     } else {
