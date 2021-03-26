@@ -2253,8 +2253,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     // Prepare email content for Library staff
     libOptions.from = frmData.sect_contact_information.fields.fld_email.value;
     libOptions.replyTo = frmData.sect_contact_information.fields.fld_email.value;
-    // @TODO Routing goes to Events team in production.
-    libOptions.to = 'jlk4p@virginia.edu'; //'jmf6a@virginia.edu,mhm8m@virginia.edu,dlg7y@virginia.edu';
+    libOptions.to = 'jmf6a@virginia.edu,mhm8m@virginia.edu,dlg7y@virginia.edu';
     libOptions.subject = 'Harrison Event Space Request';
     libOptions.html = msg + contactInfo + eventInfo + inputs + reqText;
     libOptions.text = stripHtml(msg + contactInfo + eventInfo + inputs + reqText);
