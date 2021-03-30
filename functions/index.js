@@ -104,7 +104,8 @@ exports.libraryOccupancyLogging = functions.database.instance('uvalib-api-occupa
       const userId = (context.auth && context.auth.uid)? context.auth.uid:"";
       const libraryId = context.params.libraryId;
       const entry = change.after.val();
-      admin.database().ref(`locationsLogs/${libraryId}/occupancylogs/${entry.timestamp_end}`)
+      const ts = entry.timestamp_end? entry.timestamp_end: entry.timestamp;
+      admin.database().ref(`locationsLogs/${libraryId}/occupancylogs/${ts}`)
           .set({value:entry.value, userId:userId});
     });
 exports.libraryNoMaskCountLogging = functions.database.instance('uvalib-api-occupancy')
