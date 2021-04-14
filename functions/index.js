@@ -2727,6 +2727,10 @@ async function processVideoClipRequest(reqId, submitted, frmData, libOptions, us
         instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_phone_number.value + "<br>\n";
         data['field_1770'] = frmData.sect_instructor_information.fields.fld_phone_number.value;
     }
+    if (frmData.sect_instructor_information.fields.fld_university_affiliation.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_affiliation.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_university_affiliation.value + "<br>\n";
+        data['field_1767'] = frmData.sect_instructor_information.fields.fld_university_affiliation.value;
+    }
     if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value) {
         instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_university_department_or_school.value + "<br>\n";
         data['field_1768'] = frmData.sect_instructor_information.fields.fld_university_department_or_school.value;
@@ -2773,7 +2777,7 @@ async function processVideoClipRequest(reqId, submitted, frmData, libOptions, us
 
     videoInfo += "\n<h3>"+frmData.sect_video_information.title+"</h3>\n\n<p>";
     if (frmData.sect_video_information.fields.fld_title.value) {
-        videoInfo += "<strong>" + frmData.sect_video_information.fields.fld_title.label + ":</strong> " + frmData.sect_video_information.fields.fld_title.value + "<br><br>\n\n";
+        videoInfo += "<strong>" + frmData.sect_video_information.fields.fld_title.label + ":</strong> " + frmData.sect_video_information.fields.fld_title.value + "<br>\n";
         data['field_1776'] = frmData.sect_video_information.fields.fld_title.value;
     }
     if (frmData.sect_video_information.fields.fld_call_number.value) {
@@ -2787,7 +2791,8 @@ async function processVideoClipRequest(reqId, submitted, frmData, libOptions, us
     videoInfo += "</p><br>\n";
 
     clipInfo += "\n<h3>"+frmData.sect_clip_information.title+"</h3>\n\n<p>";
-    if (frmData.sect_clip_information.fields.fld_clip_timestamps.value.data && frmData.sect_scheduling_information.fields.fld_clip_timestamps.value.data.length > 0) {
+    console.log(frmData.sect_clip_information.fields.fld_clip_timestamps.value);
+    if (frmData.sect_clip_information.fields.fld_clip_timestamps.value.data && frmData.sect_clip_information.fields.fld_clip_timestamps.value.data.length > 0) {
         let numClips = 0;
         for (let i=0; i < frmData.sect_clip_information.fields.fld_clip_timestamps.value.data.length; i++) {
             if (frmData.sect_clip_information.fields.fld_clip_timestamps.value.data[i].show) numClips++;
@@ -2803,6 +2808,10 @@ async function processVideoClipRequest(reqId, submitted, frmData, libOptions, us
             }
         }
         data['field_1780'] = stripHtml(clipsStr);
+    }
+    if (frmData.sect_clip_information.fields.fld_comments.value) {
+        clipInfo += "<strong>" + frmData.sect_clip_information.fields.fld_comments.label + ":</strong> " + frmData.sect_clip_information.fields.fld_comments.value + "<br>\n";
+        data['field_1781'] = frmData.sect_clip_information.fields.fld_comments.value;
     }
     clipInfo += "</p><br>\n";
 
