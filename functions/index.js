@@ -2690,54 +2690,54 @@ async function processVideoClipRequest(reqId, submitted, frmData, libOptions, us
     let data = { 'field_1782': reqId, 'ts_start': submitted, 'ts_end': submitted };
 
     // Prepare email message body and LibInsight data parameters
-    instructorInfo += "\n<h3>"+frmData.sect_instructor_information_.title+"</h3>\n\n<p>";
-    if (frmData.sect_instructor_information_.fields.fld_uva_computing_id.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_uva_computing_id.value + "<br>\n";
-        data['field_1764'] = frmData.sect_instructor_information_.fields.fld_uva_computing_id.value;
+    instructorInfo += "\n<h3>"+frmData.sect_instructor_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_instructor_information.fields.fld_uva_computing_id.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_uva_computing_id.value + "<br>\n";
+        data['field_1764'] = frmData.sect_instructor_information.fields.fld_uva_computing_id.value;
     }
-    if (frmData.sect_instructor_information_.fields.fld_name.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_name.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_name.value + "<br>\n";
-        data['field_1762'] = frmData.sect_instructor_information_.fields.fld_name.value;
-        instructorName = frmData.sect_instructor_information_.fields.fld_name.value;
+    if (frmData.sect_instructor_information.fields.fld_name.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_name.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_name.value + "<br>\n";
+        data['field_1762'] = frmData.sect_instructor_information.fields.fld_name.value;
+        instructorName = frmData.sect_instructor_information.fields.fld_name.value;
     }
-    if (frmData.sect_instructor_information_.fields.fld_email_address.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_email_address.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_email_address.value + "<br>\n";
-        data['field_1763'] = frmData.sect_instructor_information_.fields.fld_email_address.value;
-        instructorEmail = frmData.sect_instructor_information_.fields.fld_email_address.value;
+    if (frmData.sect_instructor_information.fields.fld_email_address.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_email_address.value + "<br>\n";
+        data['field_1763'] = frmData.sect_instructor_information.fields.fld_email_address.value;
+        instructorEmail = frmData.sect_instructor_information.fields.fld_email_address.value;
     }
-    if (frmData.sect_instructor_information_.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value + "<br>\n";
-        data['field_1760'] = frmData.sect_instructor_information_.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value;
-        if (frmData.sect_instructor_information_.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value === 'Yes') {
-            if (frmData.sect_instructor_information_.fields.fld_instructor_name.value) {
-                instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_instructor_name.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_instructor_name.value + "<br>\n";
-                data['field_1765'] = frmData.sect_instructor_information_.fields.fld_instructor_name.value;
-                instructorName = frmData.sect_instructor_information_.fields.fld_instructor_name.value;
-                assistantName = frmData.sect_instructor_information_.fields.fld_name.value;
+    if (frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value + "<br>\n";
+        data['field_1760'] = frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value;
+        if (frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value === 'Yes') {
+            if (frmData.sect_instructor_information.fields.fld_instructor_name.value) {
+                instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_instructor_name.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_instructor_name.value + "<br>\n";
+                data['field_1765'] = frmData.sect_instructor_information.fields.fld_instructor_name.value;
+                instructorName = frmData.sect_instructor_information.fields.fld_instructor_name.value;
+                assistantName = frmData.sect_instructor_information.fields.fld_name.value;
             }
-            if (frmData.sect_instructor_information_.fields.fld_instructor_email_address.value) {
-                instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_instructor_email_address.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_instructor_email_address.value + "<br>\n";
-                data['field_1766'] = frmData.sect_instructor_information_.fields.fld_instructor_email_address.value;
-                instructorEmail = frmData.sect_instructor_information_.fields.fld_instructor_email_address.value;
-                assistantEmail = frmData.sect_instructor_information_.fields.fld_email_address.value;
+            if (frmData.sect_instructor_information.fields.fld_instructor_email_address.value) {
+                instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_instructor_email_address.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_instructor_email_address.value + "<br>\n";
+                data['field_1766'] = frmData.sect_instructor_information.fields.fld_instructor_email_address.value;
+                instructorEmail = frmData.sect_instructor_information.fields.fld_instructor_email_address.value;
+                assistantEmail = frmData.sect_instructor_information.fields.fld_email_address.value;
             }
         }
     }
-    if (frmData.sect_instructor_information_.fields.fld_phone_number.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_phone_number.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_phone_number.value + "<br>\n";
-        data['field_1770'] = frmData.sect_instructor_information_.fields.fld_phone_number.value;
+    if (frmData.sect_instructor_information.fields.fld_phone_number.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_phone_number.value + "<br>\n";
+        data['field_1770'] = frmData.sect_instructor_information.fields.fld_phone_number.value;
     }
-    if (frmData.sect_instructor_information_.fields.fld_university_department_or_school.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_university_department_or_school.value + "<br>\n";
-        data['field_1768'] = frmData.sect_instructor_information_.fields.fld_university_department_or_school.value;
-        if (frmData.sect_instructor_information_.fields.fld_university_department_or_school.value === 'Other...') {
-            instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_other_department_or_school.value + "<br>\n";
-            data['field_1769'] = frmData.sect_instructor_information_.fields.fld_other_department_or_school.value;
+    if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_university_department_or_school.value + "<br>\n";
+        data['field_1768'] = frmData.sect_instructor_information.fields.fld_university_department_or_school.value;
+        if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value === 'Other...') {
+            instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_other_department_or_school.value + "<br>\n";
+            data['field_1769'] = frmData.sect_instructor_information.fields.fld_other_department_or_school.value;
         }
     }
-    if (frmData.sect_instructor_information_.fields.fld_specify_your_messenger_mail.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information_.fields.fld_specify_your_messenger_mail.label + ":</strong> " + frmData.sect_instructor_information_.fields.fld_specify_your_messenger_mail.value + "<br>\n";
-        data['field_1771'] = frmData.sect_instructor_information_.fields.fld_specify_your_messenger_mail.value;
+    if (frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.value + "<br>\n";
+        data['field_1771'] = frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.value;
     }
     instructorInfo += "</p><br>\n";
 
