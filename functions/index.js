@@ -475,6 +475,14 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                     data['field_654'] = frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment;
                 }
             }
+            if (frmData.sect_course_information.fields.fld_lms.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_lms.value + "<br>\n";
+                data['field_1785'] = frmData.sect_course_information.fields.fld_lms.value;
+                if (frmData.sect_course_information.fields.fld_lms.value === 'Other...') {
+                    courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_other_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_other_lms.value + "<br>\n";
+                    data['field_1786'] = frmData.sect_course_information.fields.fld_other_lms.value;
+                }
+            }
             courseInfo += "</p><br>\n";
         }
         // Create requestor info output content and set appropriate LibInsight fields.
@@ -1357,6 +1365,14 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
         courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.label + ":</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
         data['field_962'] = frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value;
+    }
+    if (frmData.sect_course_information.fields.fld_lms.value) {
+        courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_lms.value + "<br>\n";
+        data['field_1785'] = frmData.sect_course_information.fields.fld_lms.value;
+        if (frmData.sect_course_information.fields.fld_lms.value === 'Other...') {
+            courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_other_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_other_lms.value + "<br>\n";
+            data['field_1786'] = frmData.sect_course_information.fields.fld_other_lms.value;
+        }
     }
     courseInfo += "</p><br>\n";
 
@@ -2688,24 +2704,6 @@ function sessionLengthAndChoicesToString(data) {
     }
     for (let j=0; j < data.session.sessionDateTime.length; j++) {
         str += choiceDateTimeToString(data.session.sessionDateTime[j]);
-    }
-    return str;
-}
-
-function videoClipToString(data) {
-    let str = '';
-    str += "<h4>Clip " + data.nth + "</h4>\n";
-    if (data.clip.startTime !== "") {
-        str += "<p><strong>Start time (hh:mm)</strong><br>\n" + data.clip.startTime + "</p>\n";
-    }
-    if (data.clip.startDescription !== "") {
-        str += "<p><strong>Start description</strong><br>\n" + data.clip.startDescription + "</p>\n";
-    }
-    if (data.clip.endTime !== "") {
-        str += "<p><strong>End time (hh:mm)</strong><br>\n" + data.clip.endTime + "</p>\n";
-    }
-    if (data.clip.endDescription !== "") {
-        str += "<p><strong>End description</strong><br>\n" + data.clip.endDescription + "</p>\n";
     }
     return str;
 }
