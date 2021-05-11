@@ -477,10 +477,10 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
             }
             if (frmData.sect_course_information.fields.fld_lms.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_lms.value + "<br>\n";
-                data['field_1785'] = frmData.sect_course_information.fields.fld_lms.value;
+                data['field_1787'] = frmData.sect_course_information.fields.fld_lms.value;
                 if (frmData.sect_course_information.fields.fld_lms.value === 'Other...') {
                     courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_other_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_other_lms.value + "<br>\n";
-                    data['field_1786'] = frmData.sect_course_information.fields.fld_other_lms.value;
+                    data['field_1788'] = frmData.sect_course_information.fields.fld_other_lms.value;
                 }
             }
             courseInfo += "</p><br>\n";
