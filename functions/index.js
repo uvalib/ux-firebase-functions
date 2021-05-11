@@ -28,11 +28,8 @@ const personalCopyReserveDatasetApi = functions.config().libinsighturl.personalc
 const researchTutorialRequestDatasetApi = functions.config().libinsighturl.researchtutorial;
 const requestLibraryClassDatasetApi = functions.config().libinsighturl.libraryclass;
 const requestEventSpaceDatasetApi = functions.config().libinsighturl.eventspacerequest;
-const requestMediaClassroomDatasetApi = functions.config().libinsighturl.mediaclassroomrequest;
 const requestZoomRoomDatasetApi = functions.config().libinsighturl.zoomroomrequest;
 const requestInternalZoomWebinarDatasetApi = functions.config().libinsighturl.internalzoomwebinarrequest;
-const governmentInformationDatasetApi = functions.config().libinsighturl.governmentinformation;
-const videoClipRequestDatasetApi = functions.config().libinsighturl.videocliprequest;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
 let queryString = '';
@@ -239,8 +236,6 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processRequestZoomRoom(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'zoom_webinar_request') {
         return processRequestZoomWebinar(requestId, when, formFields, libraryOptions, patronOptions);
-    } else if (formId === 'video_clip_request') {
-        return processVideoClipRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
     }
@@ -2678,166 +2673,6 @@ async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, 
 
     try {
         return postEmailAndData(reqId, libOptions, userOptions, requestInternalZoomWebinarDatasetApi, data);
-    }
-    catch (error) {
-        console.log(`error: ${JSON.stringify(error)}`);
-        return error;
-    }
-}
-async function processVideoClipRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let instructorInfo = courseInfo = videoInfo = clipInfo = msg = instructorName = instructorEmail = assistantName = assistantEmail = courseNum = materials = itemDetails = '';
-    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
-    let data = { 'field_1782': reqId, 'ts_start': submitted, 'ts_end': submitted };
-
-    // Prepare email message body and LibInsight data parameters
-    instructorInfo += "\n<h3>"+frmData.sect_instructor_information.title+"</h3>\n\n<p>";
-    if (frmData.sect_instructor_information.fields.fld_uva_computing_id.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_uva_computing_id.value + "<br>\n";
-        data['field_1764'] = frmData.sect_instructor_information.fields.fld_uva_computing_id.value;
-    }
-    if (frmData.sect_instructor_information.fields.fld_name.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_name.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_name.value + "<br>\n";
-        data['field_1762'] = frmData.sect_instructor_information.fields.fld_name.value;
-        instructorName = frmData.sect_instructor_information.fields.fld_name.value;
-    }
-    if (frmData.sect_instructor_information.fields.fld_email_address.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_email_address.value + "<br>\n";
-        data['field_1763'] = frmData.sect_instructor_information.fields.fld_email_address.value;
-        instructorEmail = frmData.sect_instructor_information.fields.fld_email_address.value;
-    }
-    if (frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value + "<br>\n";
-        data['field_1760'] = frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value;
-        if (frmData.sect_instructor_information.fields.fld_are_you_making_this_request_on_behalf_of_the_instructor.value === 'Yes') {
-            if (frmData.sect_instructor_information.fields.fld_instructor_name.value) {
-                instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_instructor_name.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_instructor_name.value + "<br>\n";
-                data['field_1765'] = frmData.sect_instructor_information.fields.fld_instructor_name.value;
-                instructorName = frmData.sect_instructor_information.fields.fld_instructor_name.value;
-                assistantName = frmData.sect_instructor_information.fields.fld_name.value;
-            }
-            if (frmData.sect_instructor_information.fields.fld_instructor_email_address.value) {
-                instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_instructor_email_address.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_instructor_email_address.value + "<br>\n";
-                data['field_1766'] = frmData.sect_instructor_information.fields.fld_instructor_email_address.value;
-                instructorEmail = frmData.sect_instructor_information.fields.fld_instructor_email_address.value;
-                assistantEmail = frmData.sect_instructor_information.fields.fld_email_address.value;
-            }
-        }
-    }
-    if (frmData.sect_instructor_information.fields.fld_phone_number.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_phone_number.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_phone_number.value + "<br>\n";
-        data['field_1770'] = frmData.sect_instructor_information.fields.fld_phone_number.value;
-    }
-    if (frmData.sect_instructor_information.fields.fld_university_affiliation.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_affiliation.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_university_affiliation.value + "<br>\n";
-        data['field_1767'] = frmData.sect_instructor_information.fields.fld_university_affiliation.value;
-    }
-    if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_university_department_or_school.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_university_department_or_school.value + "<br>\n";
-        data['field_1768'] = frmData.sect_instructor_information.fields.fld_university_department_or_school.value;
-        if (frmData.sect_instructor_information.fields.fld_university_department_or_school.value === 'Other...') {
-            instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_other_department_or_school.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_other_department_or_school.value + "<br>\n";
-            data['field_1769'] = frmData.sect_instructor_information.fields.fld_other_department_or_school.value;
-        }
-    }
-    if (frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.value) {
-        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.value + "<br>\n";
-        data['field_1771'] = frmData.sect_instructor_information.fields.fld_specify_your_messenger_mail.value;
-    }
-    instructorInfo += "</p><br>\n";
-
-    courseInfo += "\n<h3>"+frmData.sect_course_information.title+"</h3>\n\n<p>";
-    if (frmData.sect_course_information.fields.fld_course_section_selector.value) {
-        if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
-            courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
-            data['field_1772'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
-        }
-        if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
-            courseInfo += "<strong>Course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
-            data['field_1773'] = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
-            courseNum = frmData.sect_course_information.fields.fld_course_section_selector.value.course;
-        }
-        if (frmData.sect_course_information.fields.fld_course_section_selector.value.section) {
-            courseInfo += "<strong>Section:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.section + "<br>\n";
-            data['field_1783'] = frmData.sect_course_information.fields.fld_course_section_selector.value.section;
-        }
-        if (frmData.sect_course_information.fields.fld_course_section_selector.value.title) {
-            courseInfo += "<strong>Title:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.title + "<br>\n";
-            data['field_1784'] = frmData.sect_course_information.fields.fld_course_section_selector.value.title;
-        }
-        if (frmData.sect_course_information.fields.fld_lms.value) {
-            courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_lms.value + "<br>\n";
-            data['field_1774'] = frmData.sect_course_information.fields.fld_lms.value;
-            if (frmData.sect_course_information.fields.fld_lms.value === 'Other...') {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_other_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_other_lms.value + "<br>\n";
-                data['field_1775'] = frmData.sect_course_information.fields.fld_other_lms.value;
-            }
-        }
-    }
-    courseInfo += "</p><br>\n";
-
-    videoInfo += "\n<h3>"+frmData.sect_video_information.title+"</h3>\n\n<p>";
-    if (frmData.sect_video_information.fields.fld_title.value) {
-        videoInfo += "<strong>" + frmData.sect_video_information.fields.fld_title.label + ":</strong> " + frmData.sect_video_information.fields.fld_title.value + "<br>\n";
-        data['field_1776'] = frmData.sect_video_information.fields.fld_title.value;
-    }
-    if (frmData.sect_video_information.fields.fld_call_number.value) {
-        videoInfo += "<strong>" + frmData.sect_video_information.fields.fld_call_number.label + ":</strong> " + frmData.sect_video_information.fields.fld_call_number.value + "<br>\n";
-        data['field_1777'] = frmData.sect_video_information.fields.fld_call_number.value;
-    }
-    if (frmData.sect_video_information.fields.fld_edition.value) {
-        videoInfo += "<strong>" + frmData.sect_video_information.fields.fld_edition.label + ":</strong> " + frmData.sect_video_information.fields.fld_edition.value + "<br>\n";
-        data['field_1779'] = frmData.sect_video_information.fields.fld_edition.value;
-    }
-    videoInfo += "</p><br>\n";
-
-    clipInfo += "\n<h3>"+frmData.sect_clip_information.title+"</h3>\n\n<p>";
-    console.log(frmData.sect_clip_information.fields.fld_clip_timestamps.value);
-    if (frmData.sect_clip_information.fields.fld_clip_timestamps.value.data && frmData.sect_clip_information.fields.fld_clip_timestamps.value.data.length > 0) {
-        let numClips = 0;
-        for (let i=0; i < frmData.sect_clip_information.fields.fld_clip_timestamps.value.data.length; i++) {
-            if (frmData.sect_clip_information.fields.fld_clip_timestamps.value.data[i].show) numClips++;
-        }
-        clipInfo += "<p><strong>Clips requested</strong>:" + numClips + "</p>\n";
-        let clipsStr = '';
-        for (let i=0; i < frmData.sect_clip_information.fields.fld_clip_timestamps.value.data.length; i++) {
-            const clip = frmData.sect_clip_information.fields.fld_clip_timestamps.value.data[i];
-            if (clip.show) {
-                const clipText = videoClipToString(clip);
-                clipInfo += clipText + "<hr>\n";
-                clipsStr += clipText;
-            }
-        }
-        data['field_1780'] = stripHtml(clipsStr);
-    }
-    if (frmData.sect_clip_information.fields.fld_comments.value) {
-        clipInfo += "<strong>" + frmData.sect_clip_information.fields.fld_comments.label + ":</strong> " + frmData.sect_clip_information.fields.fld_comments.value + "<br>\n";
-        data['field_1781'] = frmData.sect_clip_information.fields.fld_comments.value;
-    }
-    clipInfo += "</p><br>\n";
-
-    // Prepare email content for Library staff
-    libOptions.from = instructorEmail;
-    libOptions.replyTo = instructorEmail;
-    libOptions.cc = (assistantEmail !== '') ? assistantEmail : '';
-    libOptions.to = 'jlk4p@virginia.edu'; //'lib-reserves@virginia.edu';
-    libOptions.subject = 'CLIPPING: ' + instructorName + ' ' + courseNum;
-    msg = "<p>This video clip request has been submitted.</p>\n\n";
-    libOptions.html = msg + instructorInfo + courseInfo + videoInfo + clipInfo + reqText;
-    libOptions.text = stripHtml(msg + instructorInfo + courseInfo + videoInfo + clipInfo + reqText);
-
-    // NOTE: Service Desk generates confirmation to patron.
-    // send second unneeded email here so that it doesn't generate extra ticket in Service Desk;
-    // (form workflow assumes 2 emails generated for each submission: patron confirmation which is not needed in this case)
-    userOptions.from = instructorEmail;
-    userOptions.replyTo = instructorEmail;
-    userOptions.cc = (assistantEmail !== '') ? assistantEmail : '';
-    userOptions.to = 'no-reply-library@virginia.edu';
-    userOptions.subject = 'CLIPPING: ' + instructorName + ' ' + courseNum;
-    userOptions.html = msg + instructorInfo + courseInfo + videoInfo + clipInfo + reqText;
-    userOptions.text = stripHtml(msg + instructorInfo + courseInfo + videoInfo + clipInfo + reqText);
-
-    try {
-        return postEmailAndData(reqId, libOptions, userOptions, videoClipRequestDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
