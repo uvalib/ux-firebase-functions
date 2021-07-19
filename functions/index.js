@@ -475,7 +475,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                     data['field_654'] = frmData.sect_course_information.fields.fld_course_section_selector.value.enrollment;
                 }
             }
-            if (frmData.sect_course_information.fields.fld_lms.value) {
+            if (frmData.sect_course_information.fields.fld_lms && frmData.sect_course_information.fields.fld_lms.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_lms.label + ":</strong> " + frmData.sect_course_information.fields.fld_lms.value + "<br>\n";
                 data['field_1787'] = frmData.sect_course_information.fields.fld_lms.value;
                 if (frmData.sect_course_information.fields.fld_lms.value === 'Other...') {
