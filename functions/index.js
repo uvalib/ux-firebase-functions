@@ -437,11 +437,11 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         // Build course information output section and set appropriate LibInsight fields.
         if (frmData.fld_is_this_for_course_reserves_.value === "Yes") {
             courseInfo += "\n<h3>" + frmData.sect_course_information.title + "</h3>\n\n<p>";
-/*            if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value) {
-                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.label + ":</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value + "<br>\n";
-                data['field_655'] = frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve_.value;
+            if (frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve && frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve.label + ":</strong> " + frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve.value + "<br>\n";
+                data['field_655'] = frmData.sect_course_information.fields.fld_at_which_library_should_this_item_go_on_reserve.value;
             }
-            if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
+/*            if (frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value) {
                 courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.label + ":</strong> " + frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value + "<br>\n";
                 data['field_708'] = frmData.sect_course_information.fields.fld_what_loan_period_should_be_applied_to_this_item_.value;
             }*/
@@ -483,6 +483,17 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                     data['field_1788'] = frmData.sect_course_information.fields.fld_other_lms.value;
                 }
             }
+            if (frmData.sect_course_information.fields.fld_are_you_making_this_request_on_behalf_of_an_instructor && frmData.sect_course_information.fields.fld_are_you_making_this_request_on_behalf_of_an_instructor.value) {
+                courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_are_you_making_this_request_on_behalf_of_an_instructor.label + ":</strong> " + frmData.sect_course_information.fields.fld_are_you_making_this_request_on_behalf_of_an_instructor.value + "<br>\n";
+                data['field_1820'] = frmData.sect_course_information.fields.fld_are_you_making_this_request_on_behalf_of_an_instructor.value;
+                if (frmData.sect_course_information.fields.fld_are_you_making_this_request_on_behalf_of_an_instructor.value === 'Yes') {
+                    if (frmData.sect_course_information.fields.fld_instructor_name.value) {
+                        courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_instructor_name.label + ":</strong> " + frmData.sect_course_information.fields.fld_instructor_name.value + "<br>\n";
+                        data['field_1821'] = frmData.sect_course_information.fields.fld_instructor_name.value;
+                    }
+                }
+            }
+
             courseInfo += "</p><br>\n";
         }
         // Create requestor info output content and set appropriate LibInsight fields.
