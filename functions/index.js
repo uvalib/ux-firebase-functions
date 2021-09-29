@@ -740,7 +740,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                     case 'Chemistry':
                         libOptions.to = 'lib-chemistry-books@virginia.edu';
                         break;
-                    case 'Civil and Environmental Engineering':
+                    case 'Engineering Systems and Environment':
                         libOptions.to = 'lib-civil-envi-books@virginia.edu';
                         break;
                     case 'Classics':
@@ -862,7 +862,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                     case 'Biomedical Engineering':
                     case 'Chemical Engineering':
                     case 'Chemistry':
-                    case 'Civil and Environmental Engineering':
+                    case 'Engineering Systems and Environment':
                     case 'Commerce':
                     case 'Computer Science':
                     case 'Data Science':
