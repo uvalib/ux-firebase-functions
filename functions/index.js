@@ -663,29 +663,16 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
             libOptions.to = 'lib-reserves@virginia.edu';
             libOptions.bcc = 'Libselect_video@virginia.edu';
             libOptions.subject += ' to Reserves Librarian';
-        } else if (frmData.fld_format.value === 'Music Score') {
-            libOptions.to = 'lib-reserves@virginia.edu,lb-mu-scores@virginia.edu';
-            libOptions.subject += ' to Reserves Librarian';
         } else {
-            libOptions.to = 'lib-reserves@virginia.edu';
-            if (frmData.fld_format.value === 'Music Recording') {
-                libOptions.to += ',lb-mu-recordings@virginia.edu';
-            }
-            if (frmData.fld_format.value === 'Journal Subscription') {
-                libOptions.subject += 'to Reserves Librarian';
-            } else if (frmData.fld_format.value === 'Other') {
-                libOptions.bcc += 'lib-orders@virginia.edu';
-                libOptions.subject += 'to Acquisitions';
-            } else if ((frmData.fld_format.value === 'Database') || (frmData.fld_format.value === 'Dataset')) {
-                libOptions.to += ',lib-collections@virginia.edu,data@virginia.edu';
-                libOptions.subject += 'to Reserves Librarian';
-            } else if (frmData.fld_format.value === 'Dissertation or Thesis') {
-                libOptions.to += ',lib-collections@virginia.edu';
-                libOptions.subject += 'to Reserves Librarian';
+            libOptions.to = 'lib-collections@virginia.edu';
+            if (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value && (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value !== '')) {
+                // Determine the routing based on the user department. Identify the subject librarian.
+                libOptions.to += ','+getSubjectLiaisonEmail(frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value);
             } else {
-                libOptions.bcc += 'lib-orders@virginia.edu';
-                libOptions.subject += 'to Acquisitions';
+                libOptions.to = 'purchase-requests@virginia.libanswers.com';
+                libOptions.subject += 'to Collection Librarians';
             }
+            libOptions.subject += 'to Collection Librarians';
         }
     } else {
         // not going on course reserve so gets routed...
@@ -704,148 +691,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
         } else {
             if (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value && (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value !== '')) {
                 // Determine the routing based on the user department. Identify the subject librarian.
-                switch (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value) {
-                    case 'African-American and African Studies':
-                        libOptions.to = 'lb-aaas-books@virginia.edu';
-                        break;
-                    case 'Anthropology':
-                        libOptions.to = 'lib-anthropology-books@virginia.edu';
-                        break;
-                    case 'Archaeology':
-                        libOptions.to = 'lib-archaeology-books@virginia.edu';
-                        break;
-                    case 'Architecture':
-                    case 'Architectural History':
-                    case 'Landscape Architecture':
-                        libOptions.to = 'lib-architecture-books@virginia.edu';
-                        break;
-                    case 'Art':
-                        libOptions.to = 'fal-purchase-req@virginia.edu';
-                        break;
-                    case 'Astronomy':
-                        libOptions.to = 'lib-astronomy-books@virginia.edu';
-                        break;
-                    case 'Batten School':
-                        libOptions.to = 'battenbooks@virginia.edu';
-                        break;
-                    case 'Biology':
-                        libOptions.to = 'lib-biology-books@virginia.edu';
-                        break;
-                    case 'Biomedical Engineering':
-                        libOptions.to = 'biomed-engineer-book@virginia.edu';
-                        break;
-                    case 'Chemical Engineering':
-                        libOptions.to = 'chemical-engineer-book@virginia.edu';
-                        break;
-                    case 'Chemistry':
-                        libOptions.to = 'lib-chemistry-books@virginia.edu';
-                        break;
-                    case 'Engineering Systems and Environment':
-                        libOptions.to = 'lib-civil-envi-books@virginia.edu';
-                        break;
-                    case 'Classics':
-                        libOptions.to = 'lib-classics-books@virginia.edu';
-                        break;
-                    case 'Commerce':
-                    case 'Economics':
-                        libOptions.to = 'businessbooks@virginia.edu';
-                        break;
-                    case 'Computer Science':
-                        libOptions.to = 'lib-comp-sci-books@virginia.edu';
-                        break;
-                    case 'Data Science':
-                        libOptions.to = 'jah2ax@virginia.edu';
-                        break;
-                    case 'Drama':
-                        libOptions.to = 'lib-drama-books@virginia.edu';
-                        break;
-                    case 'East Asian':
-                        libOptions.to = 'lib-east-asian-books@virginia.edu';
-                        break;
-                    case 'Education':
-                        libOptions.to = 'Education@virginia.edu';
-                        break;
-                    case 'Electrical and Computer Engineering':
-                        libOptions.to = 'lib-elec-comp-books@virginia.edu';
-                        break;
-                    case 'English':
-                        libOptions.to = 'lb-english@virginia.edu';
-                        break;
-                    case 'Environmental Sciences':
-                        libOptions.to = 'lib-env-sci-books@virginia.edu';
-                        break;
-                    case 'French':
-                        libOptions.to = 'lib-french-books@virginia.edu';
-                        break;
-                    case 'German':
-                        libOptions.to = 'germanbooks@virginia.edu';
-                        break;
-                    case 'History':
-                        libOptions.to = 'historybooks@virginia.edu';
-                        break;
-                    case 'Library':
-                        libOptions.to = 'lib-library-requests@virginia.edu';
-                        break;
-                    case 'Materials Science and Engineering':
-                        libOptions.to = 'material-sci-eng-books@virginia.edu';
-                        break;
-                    case 'Mathematics':
-                        libOptions.to = 'lib-mathematics-books@virginia.edu';
-                        break;
-                    case 'Mechanical and Aerospace Engineering':
-                        libOptions.to = 'lib-mech-aero-books@virginia.edu';
-                        break;
-                    case 'Media Studies':
-                        libOptions.to = 'lb-media-studies-books@virginia.edu';
-                        break;
-                    case 'Middle Eastern and South Asian':
-                        libOptions.to = 'mideast-southasia-book@virginia.edu';
-                        break;
-                    case 'Music':
-                        libOptions.to = 'lb-mu-books@virginia.edu';
-                        break;
-                    case 'Other...':
-                        libOptions.to = 'lib-collections@virginia.edu';
-                        break;
-                    case 'Philosophy':
-                        libOptions.to = 'philosophybooks@virginia.edu';
-                        break;
-                    case 'Physics':
-                        libOptions.to = 'lib-physics-books@virginia.edu';
-                        break;
-                    case 'Politics':
-                        libOptions.to = 'politicsbooks@virginia.edu';
-                        break;
-                    case 'Psychology':
-                        libOptions.to = 'lib-psychology-books@virginia.edu';
-                        break;
-                    case 'Religious Studies':
-                        libOptions.to = 'relstudiesbooks@virginia.edu';
-                        break;
-                    case 'Science, Technology and Society':
-                        libOptions.to = 'sci-tech-society-books@virginia.edu';
-                        break;
-                    case 'Slavic':
-                        libOptions.to = 'slavicbooks@virginia.edu';
-                        break;
-                    case 'Sociology':
-                        libOptions.to = 'lb-Sociology@virginia.edu';
-                        break;
-                    case 'Spanish, Italian, and Portuguese':
-                        libOptions.to = 'span-ital-port-books@virginia.edu';
-                        break;
-                    case 'Statistics':
-                        libOptions.to = 'lib-statistics-books@virginia.edu';
-                        break;
-                    case 'Systems and Information Engineering':
-                        libOptions.to = 'lib-sys-info-books@virginia.edu';
-                        break;
-                    case 'Women, Gender, & Sexuality':
-                        libOptions.to = 'lb-wgsbooks@virginia.edu';
-                        break;
-                    default:
-                        libOptions.to = 'purchase-requests@virginia.libanswers.com';
-                }
+                libOptions.to = getSubjectLiaisonEmail(frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value);
                 switch (frmData.sect_requestor_information.fields.fld_lib_university_department_or_school.value) {
                     case 'African-American and African Studies':
                     case 'American Studies':
@@ -2705,6 +2551,153 @@ async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, 
         console.log(`error: ${JSON.stringify(error)}`);
         return error;
     }
+}
+
+function getSubjectLiaisonEmail(dept) {
+    let emailAddr;
+    switch (dept) {
+        case 'African-American and African Studies':
+            emailAddr = 'lb-aaas-books@virginia.edu';
+            break;
+        case 'Anthropology':
+            emailAddr = 'lib-anthropology-books@virginia.edu';
+            break;
+        case 'Archaeology':
+            emailAddr = 'lib-archaeology-books@virginia.edu';
+            break;
+        case 'Architecture':
+        case 'Architectural History':
+        case 'Landscape Architecture':
+            emailAddr = 'lib-architecture-books@virginia.edu';
+            break;
+        case 'Art':
+            emailAddr = 'fal-purchase-req@virginia.edu';
+            break;
+        case 'Astronomy':
+            emailAddr = 'lib-astronomy-books@virginia.edu';
+            break;
+        case 'Batten School':
+            emailAddr = 'battenbooks@virginia.edu';
+            break;
+        case 'Biology':
+            emailAddr = 'lib-biology-books@virginia.edu';
+            break;
+        case 'Biomedical Engineering':
+            emailAddr = 'biomed-engineer-book@virginia.edu';
+            break;
+        case 'Chemical Engineering':
+            emailAddr = 'chemical-engineer-book@virginia.edu';
+            break;
+        case 'Chemistry':
+            emailAddr = 'lib-chemistry-books@virginia.edu';
+            break;
+        case 'Engineering Systems and Environment':
+            emailAddr = 'lib-civil-envi-books@virginia.edu';
+            break;
+        case 'Classics':
+            emailAddr = 'lib-classics-books@virginia.edu';
+            break;
+        case 'Commerce':
+        case 'Economics':
+            emailAddr = 'businessbooks@virginia.edu';
+            break;
+        case 'Computer Science':
+            emailAddr = 'lib-comp-sci-books@virginia.edu';
+            break;
+        case 'Data Science':
+            emailAddr = 'jah2ax@virginia.edu';
+            break;
+        case 'Drama':
+            emailAddr = 'lib-drama-books@virginia.edu';
+            break;
+        case 'East Asian':
+            emailAddr = 'lib-east-asian-books@virginia.edu';
+            break;
+        case 'Education':
+            emailAddr = 'Education@virginia.edu';
+            break;
+        case 'Electrical and Computer Engineering':
+            emailAddr = 'lib-elec-comp-books@virginia.edu';
+            break;
+        case 'English':
+            emailAddr = 'lb-english@virginia.edu';
+            break;
+        case 'Environmental Sciences':
+            emailAddr = 'lib-env-sci-books@virginia.edu';
+            break;
+        case 'French':
+            emailAddr = 'lib-french-books@virginia.edu';
+            break;
+        case 'German':
+            emailAddr = 'germanbooks@virginia.edu';
+            break;
+        case 'History':
+            emailAddr = 'historybooks@virginia.edu';
+            break;
+        case 'Library':
+            emailAddr = 'lib-library-requests@virginia.edu';
+            break;
+        case 'Materials Science and Engineering':
+            emailAddr = 'material-sci-eng-books@virginia.edu';
+            break;
+        case 'Mathematics':
+            emailAddr = 'lib-mathematics-books@virginia.edu';
+            break;
+        case 'Mechanical and Aerospace Engineering':
+            emailAddr = 'lib-mech-aero-books@virginia.edu';
+            break;
+        case 'Media Studies':
+            emailAddr = 'lb-media-studies-books@virginia.edu';
+            break;
+        case 'Middle Eastern and South Asian':
+            emailAddr = 'mideast-southasia-book@virginia.edu';
+            break;
+        case 'Music':
+            emailAddr = 'lb-mu-books@virginia.edu';
+            break;
+        case 'Other...':
+            emailAddr = 'lib-collections@virginia.edu';
+            break;
+        case 'Philosophy':
+            emailAddr = 'philosophybooks@virginia.edu';
+            break;
+        case 'Physics':
+            emailAddr = 'lib-physics-books@virginia.edu';
+            break;
+        case 'Politics':
+            emailAddr = 'politicsbooks@virginia.edu';
+            break;
+        case 'Psychology':
+            emailAddr = 'lib-psychology-books@virginia.edu';
+            break;
+        case 'Religious Studies':
+            emailAddr = 'relstudiesbooks@virginia.edu';
+            break;
+        case 'Science, Technology and Society':
+            emailAddr = 'sci-tech-society-books@virginia.edu';
+            break;
+        case 'Slavic':
+            emailAddr = 'slavicbooks@virginia.edu';
+            break;
+        case 'Sociology':
+            emailAddr = 'lb-Sociology@virginia.edu';
+            break;
+        case 'Spanish, Italian, and Portuguese':
+            emailAddr = 'span-ital-port-books@virginia.edu';
+            break;
+        case 'Statistics':
+            emailAddr = 'lib-statistics-books@virginia.edu';
+            break;
+        case 'Systems and Information Engineering':
+            emailAddr = 'lib-sys-info-books@virginia.edu';
+            break;
+        case 'Women, Gender, & Sexuality':
+            emailAddr = 'lb-wgsbooks@virginia.edu';
+            break;
+        default:
+            emailAddr = 'purchase-requests@virginia.libanswers.com';
+    }
+    return emailAddr;
 }
 
 function sessionLengthAndChoicesToString(data) {
