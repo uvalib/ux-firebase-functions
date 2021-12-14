@@ -356,7 +356,7 @@ function isObjectEmpty(obj) {
 }
 
 async function processPurchaseRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let adminMsg = subjPre = courseInfo = biblioInfo = requestorInfo = '';
+    let adminMsg = subjPre = courseInfo = courseTerm = biblioInfo = requestorInfo = '';
     let patronMsg = "<p>A copy of your purchase recommendation is shown below.</p><br>\n\n";
     let data = { 'field_642': reqId, 'ts_start': submitted };
 
@@ -452,6 +452,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
                 if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
                     courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
                     data['field_648'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
+                    courseTerm = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
                 }
                 if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
                     courseInfo += "<strong>Course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
@@ -654,7 +655,7 @@ async function processPurchaseRequest(reqId, submitted, frmData, libOptions, use
 
     // Prepare email content for Library staff
     libOptions.subject = subjPre + ': ';
-    libOptions.subject += (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? 'Reserve ' : '';
+    libOptions.subject += (frmData.fld_is_this_for_course_reserves_.value && (frmData.fld_is_this_for_course_reserves_.value === "Yes")) ? courseTerm + ' Reserve ' : '';
     libOptions.subject += 'Purchase Recommendation ';
     libOptions.from = '"' + frmData.sect_requestor_information.fields.fld_name.value + '" <' + frmData.sect_requestor_information.fields.fld_email_address.value + '>';
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
@@ -1134,7 +1135,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
 }
 
 async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libOptions, userOptions) {
-    let instructorInfo = courseInfo = materialsInfo = msg = instructorName = instructorEmail = assistantName = assistantEmail = courseNum = materials = itemDetails = '';
+    let instructorInfo = courseInfo = materialsInfo = msg = instructorName = instructorEmail = assistantName = assistantEmail = courseNum = courseTerm = materials = itemDetails = '';
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let data = { 'field_967': reqId, 'ts_start': submitted, 'ts_end': submitted };
 
@@ -1195,6 +1196,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
         if (frmData.sect_course_information.fields.fld_course_section_selector.value.term) {
             courseInfo += "<strong>Term:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.term + "<br>\n";
             data['field_955'] = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
+            courseTerm = frmData.sect_course_information.fields.fld_course_section_selector.value.term;
         }
         if (frmData.sect_course_information.fields.fld_course_section_selector.value.course) {
             courseInfo += "<strong>Course:</strong> " + frmData.sect_course_information.fields.fld_course_section_selector.value.course + "<br>\n";
@@ -1313,7 +1315,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
     libOptions.replyTo = instructorEmail;
     libOptions.cc = (assistantEmail !== '') ? assistantEmail : '';
     libOptions.to = 'lib-reserves@virginia.edu';
-    libOptions.subject = 'Personal Copy - ' + instructorName + ' ' + courseNum;
+    libOptions.subject = courseTerm + ' | Personal Copy - ' + instructorName + ' ' + courseNum;
     if (materials === 'Media') {
         msg = "<p>RMC copy to handle media content for this personal copy request.</p><br>\n\n";
     } else {
@@ -1335,7 +1337,7 @@ async function processPersonalCopyReserveRequest(reqId, submitted, frmData, libO
         // (form workflow assumes 2 emails generated for each submission: library staff and other is confirmation)
         userOptions.to = 'no-reply-library@virginia.edu';
     }
-    userOptions.subject = 'Personal Copy - ' + instructorName + ' ' + courseNum;
+    userOptions.subject = courseTerm + ' | Personal Copy - ' + instructorName + ' ' + courseNum;
     userOptions.html = msg + instructorInfo + courseInfo + materialsInfo + reqText;
     userOptions.text = stripHtml(msg + instructorInfo + courseInfo + materialsInfo + reqText);
 
