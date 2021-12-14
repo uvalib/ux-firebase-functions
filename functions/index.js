@@ -30,6 +30,7 @@ const requestLibraryClassDatasetApi = functions.config().libinsighturl.librarycl
 const requestEventSpaceDatasetApi = functions.config().libinsighturl.eventspacerequest;
 const requestZoomRoomDatasetApi = functions.config().libinsighturl.zoomroomrequest;
 const requestInternalZoomWebinarDatasetApi = functions.config().libinsighturl.internalzoomwebinarrequest;
+const staffPrintReserveDatasetApi = functions.config().libinsighturl.staffprintreserverequest;
 
 // Variables for identifying a problem when a form submission doesn't complete successfully in sending emails or saving data to LibInsight.
 let queryString = '';
@@ -236,6 +237,8 @@ exports.processRequest = functions.database.ref('/requests/{requestId}').onCreat
         return processRequestZoomRoom(requestId, when, formFields, libraryOptions, patronOptions);
     } else if (formId === 'zoom_webinar_request') {
         return processRequestZoomWebinar(requestId, when, formFields, libraryOptions, patronOptions);
+    } else if (formId === 'staff_print_reserve_request') {
+        return processStaffPrintReserveRequest(requestId, when, formFields, libraryOptions, patronOptions);
     } else {
         return null;
     }
@@ -1447,6 +1450,91 @@ async function processResearchTutorialRequest(reqId, submitted, frmData, libOpti
 
     try {
         return postEmailAndData(reqId, libOptions, userOptions, researchTutorialRequestDatasetApi, data);
+    }
+    catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+        return error;
+    }
+}
+
+async function processStaffPrintReserveRequest(reqId, submitted, frmData, libOptions, userOptions) {
+    let instructorInfo = courseInfo = materialsInfo = requestorInfo = instructorName = yourName = yourEmail = courseNum = courseTerm = '';
+    let msg = 'This is a print materials course reserve request submitted by Library Staff.';
+    let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
+    let data = { 'field_1832': reqId, 'ts_start': submitted, 'ts_end': submitted };
+
+    // Prepare email message body and LibInsight data parameters
+    instructorInfo += "\n<h3>"+frmData.sect_instructor_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_instructor_information.fields.fld_instructor_name.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_instructor_name.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_instructor_name.value + "<br>\n";
+        data['field_1823'] = frmData.sect_instructor_information.fields.fld_instructor_name.value;
+        instructorName = frmData.sect_instructor_information.fields.fld_instructor_name.value;
+    }
+    if (frmData.sect_instructor_information.fields.fld_instructor_email_address.value) {
+        instructorInfo += "<strong>" + frmData.sect_instructor_information.fields.fld_instructor_email_address.label + ":</strong> " + frmData.sect_instructor_information.fields.fld_instructor_email_address.value + "<br>\n";
+        data['field_1824'] = frmData.sect_instructor_information.fields.fld_instructor_email_address.value;
+    }
+    instructorInfo += "</p><br>\n";
+
+    courseInfo += "\n<h3>"+frmData.sect_course_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_course_information.fields.fld_term.value) {
+        courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_term.label + ":</strong> " + frmData.sect_course_information.fields.fld_term.value + "<br>\n";
+        data['field_1825'] = frmData.sect_course_information.fields.fld_term.value;
+        courseTerm = frmData.sect_course_information.fields.fld_term.value;
+    }
+    if (frmData.sect_course_information.fields.fld_course_id.value) {
+        courseInfo += "<strong>" + frmData.sect_course_information.fields.fld_course_id.label + ":</strong> " + frmData.sect_course_information.fields.fld_course_id.value + "<br>\n";
+        data['field_1826'] = frmData.sect_course_information.fields.fld_course_id.value;
+        courseNum = frmData.sect_course_information.fields.fld_course_id.value;
+    }
+    if (frmData.sect_course_information.fields.fld_library_location_for_reserves.value) {
+        courseInfo += "<strong>Library location:</strong> " + frmData.sect_course_information.fields.fld_library_location_for_reserves.value + "<br>\n";
+        data['field_1827'] = frmData.sect_course_information.fields.fld_library_location_for_reserves.value;
+    }
+    courseInfo += "</p><br>\n";
+
+    materialsInfo += "\n<h3>"+frmData.sect_print_materials_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_print_materials_information.fields.fld_items_to_put_on_reserve.value) {
+        materialsInfo += "<strong>" + frmData.sect_print_materials_information.fields.fld_items_to_put_on_reserve.label + ":</strong> " + frmData.sect_print_materials_information.fields.fld_items_to_put_on_reserve.value + "<br><br>\n\n";
+        data['field_1828'] = frmData.sect_print_materials_information.fields.fld_items_to_put_on_reserve.value;
+    }
+    materialsInfo += "</p><br>\n";
+
+    requestorInfo += "\n<h3>"+frmData.sect_requestor_information.title+"</h3>\n\n<p>";
+    if (frmData.sect_requestor_information.fields.fld_uva_computing_id.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_uva_computing_id.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_uva_computing_id.value + "<br>\n";
+        data['field_1831'] = frmData.sect_requestor_information.fields.fld_uva_computing_id.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_name.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_name.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_name.value + "<br>\n";
+        data['field_1829'] = frmData.sect_requestor_information.fields.fld_name.value;
+        yourName = frmData.sect_requestor_information.fields.fld_name.value;
+    }
+    if (frmData.sect_requestor_information.fields.fld_email_address.value) {
+        requestorInfo += "<strong>" + frmData.sect_requestor_information.fields.fld_email_address.label + ":</strong> " + frmData.sect_requestor_information.fields.fld_email_address.value + "<br>\n";
+        data['field_1830'] = frmData.sect_requestor_information.fields.fld_email_address.value;
+        yourEmail = frmData.sect_requestor_information.fields.fld_email_address.value;
+    }
+    requestorInfo += "</p><br>\n";
+
+    // Prepare email content for Library staff
+    libOptions.from = yourEmail;
+    libOptions.replyTo = yourEmail;
+    libOptions.to = 'lib-reserves@virginia.edu';
+    libOptions.subject = courseTerm + ' | '+ instructorName + ': ' + courseNum;
+    libOptions.html = msg + instructorInfo + courseInfo + materialsInfo + requestorInfo;
+    libOptions.text = stripHtml(msg + instructorInfo + courseInfo + materialsInfo + requestorInfo);
+
+    // Prepare second email to go no where... NOTE: Service Desk generates confirmation to patron.
+    userOptions.from = yourEmail;
+    userOptions.replyTo = yourEmail;
+    userOptions.to = 'no-reply-library@virginia.edu';
+    userOptions.subject = courseTerm + ' | '+ instructorName + ': ' + courseNum;
+    userOptions.html = msg + instructorInfo + courseInfo + materialsInfo + requestorInfo + reqText;
+    userOptions.text = stripHtml(msg + instructorInfo + courseInfo + materialsInfo + requestorInfo + reqText);
+
+    try {
+        return postEmailAndData(reqId, libOptions, userOptions, staffPrintReserveDatasetApi, data);
     }
     catch (error) {
         console.log(`error: ${JSON.stringify(error)}`);
