@@ -2616,20 +2616,21 @@ async function processRequestZoomWebinar(reqId, submitted, frmData, libOptions, 
 
     // Prepare email content for Library staff
     msg = "<p>The request below was submitted through the Library Internal Zoom Webinar Request form.</p><br>\n\n";
-    msg += "<p><a href='https://virginia.libinsight.com/dataseta.php?id=23619'"+">Access the request in the LibInsight Internal Zoom Webinar Requests dataset.</a></p><br>\n\n";
+    //msg += "<p><a href='https://virginia.libinsight.com/dataseta.php?id=23619'"+">Access the request in the LibInsight Internal Zoom Webinar Requests dataset.</a></p><br>\n\n";
     libOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
-    libOptions.to = 'lib-zoomweb@virginia.edu';
+    libOptions.to = 'lib-lits-help@virginia.edu';
     libOptions.subject = 'Internal Zoom Webinar Request';
     libOptions.html = msg + requestorInfo + webinarInfo + reqText;
     libOptions.text = stripHtml(msg + requestorInfo + webinarInfo + reqText);
 
     // Prepare email confirmation content for patron
-    msg = "<p>We have received your Internal Zoom Webinar request.</p><br>\n\n";
-    msg += "<p>Below is a copy of what you submitted.</p><br>\n\n";
-    userOptions.from = '"UVA Library Zoom Webinar Team" <lib-zoomweb@virginia.edu>';
-    userOptions.replyTo = '"UVA Library Zoom Webinar Team" <lib-zoomweb@virginia.edu>';
-    userOptions.to = frmData.sect_requestor_information.fields.fld_email_address.value;
+    msg = "";
+    //msg = "<p>We have received your Internal Zoom Webinar request.</p><br>\n\n";
+    //msg += "<p>Below is a copy of what you submitted.</p><br>\n\n";
+    userOptions.from = frmData.sect_requestor_information.fields.fld_email_address.value;
+    userOptions.replyTo = frmData.sect_requestor_information.fields.fld_email_address.value;
+    userOptions.to = "no-reply-library@virginia.edu";
     userOptions.subject = 'Your Internal Zoom Webinar Request';
     userOptions.html = msg + requestorInfo + webinarInfo + reqText;
     userOptions.text = stripHtml(msg + requestorInfo + webinarInfo + reqText);
