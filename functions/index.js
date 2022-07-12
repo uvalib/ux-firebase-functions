@@ -2192,7 +2192,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     if (frmData.sect_event_information.fields.fld_payment_method.value) {
         eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_payment_method.label + ":</strong> " + frmData.sect_event_information.fields.fld_payment_method.value + "<br>\n";
         data['field_1587'] = frmData.sect_event_information.fields.fld_payment_method.value;
-        if (frmData.sect_event_information.fields.fld_payment_method.value === 'PTAO') {
+        if (frmData.sect_event_information.fields.fld_payment_method.value === 'Workday Cost Center/Program/Activity') {
             if (frmData.sect_event_information.fields.fld_ptao.value) {
                 eventInfo += "<strong>" + frmData.sect_event_information.fields.fld_ptao.label + ":</strong> " + frmData.sect_event_information.fields.fld_ptao.value + "<br>\n";
                 data['field_1588'] = frmData.sect_event_information.fields.fld_ptao.value;
