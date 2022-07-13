@@ -2202,7 +2202,7 @@ async function processRequestEventSpace(reqId, submitted, frmData, libOptions, u
     eventInfo += "</p><br>\n";
 
     if (frmData.fld_additional_information.value) {
-        inputs += "<br>\n<strong>" + frmData.fld_additional_information.label + "</strong>" + frmData.fld_additional_information.value + "</p><br>\n";
+        inputs += "<br>\n<strong>" + frmData.fld_additional_information.label + "</strong><br>\n" + frmData.fld_additional_information.value + "</p><br>\n";
         data['field_1589'] = frmData.fld_additional_information.value;
     }
     if (frmData.fld_event_space.value) {
