@@ -934,7 +934,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
     let reqText = "<br>\n<br>\n<br>\n<strong>req #: </strong>" + reqId;
     let adminMsg = "<p><strong>* This email may contain an attachment. It is recommended that you scan the attachment to make sure it does not contain a virus.</strong></p>\n\n";
     let patronMsg = "<p>Thank you for contacting the Small Special Collection Library. This email contains a copy of the information you submitted.</p><br>\n\n";
-    patronMsg += "<p>Please contact Krystal Appiah (ka7uz@virginia.edu / 434-243-8194) or Heather Riser (mhm8m@virginia.edu / 434-924-4966) if you have questions regarding this request.</p><br>\n\n";
+    patronMsg += "<p>Please contact Jacob Hopkins (jth7ue@virginia.edu / 434-924-2763) or Krystal Appiah (ka7uz@virginia.edu / 434-243-8194) if you have questions regarding this request.</p><br>\n\n";
     let data = { 'field_874': reqId, 'ts_start': submitted };
 
     // Create contact info output content and set appropriate LibInsight fields.
@@ -1114,7 +1114,7 @@ async function processSpecCollInstructionRequest(reqId, submitted, frmData, libO
 
     libOptions.from = frmData.sect_your_contact_information.fields.fld_email_address.value;
     libOptions.replyTo = frmData.sect_your_contact_information.fields.fld_email_address.value;
-    libOptions.to = 'mhm8m@virginia.edu,ka7uz@virginia.edu';
+    libOptions.to = 'jth7ue@virginia.edu,ka7uz@virginia.edu';
     libOptions.subject = 'Small Special Collections Instruction Request: '+frmData.sect_your_contact_information.fields.fld_name.value;
     libOptions.html = adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText;
     libOptions.text = stripHtml(adminMsg + patronMsg + contactInfo + courseInfo + sessionInfo + scheduleInfo + commentInfo + reqText);
